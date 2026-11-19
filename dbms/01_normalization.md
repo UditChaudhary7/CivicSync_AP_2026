@@ -27,7 +27,7 @@ CivicSync structures the complaint lifecycle into a deterministic, multi-stage w
 2. **Automated Triage & SLA Assignment:** The database maps the selected category to its designated municipal department and assigns an initial resolution SLA (e.g., 48 hours for potholes, 24 hours for water pipe ruptures).
 3. **Duplicate Detection:** The platform analyzes incoming complaints within a spatial radius and category taxonomy to identify duplicate reports, linking redundant submissions to a canonical master ticket.
 4. **Departmental Assignment:** Department administrators review incoming tickets and formally assign them to qualified field inspection officers.
-5. **Progress Tracking & Status Transitions:** Every lifecycle change (e.g., `REPORTED` $\to$ `UNDER_REVIEW` $\to$ `ASSIGNED` $\to$ `IN_PROGRESS` $\to$ `RESOLVED` $\to$ `CLOSED`) is recorded in an immutable status history log with timestamps and officer remarks.
+5. **Progress Tracking & Status Transitions:** Every lifecycle change (e.g., `REPORTED` → `UNDER_REVIEW` → `ASSIGNED` → `IN_PROGRESS` → `RESOLVED` → `CLOSED`) is recorded in an immutable status history log with timestamps and officer remarks.
 6. **Resolution Verification:** Field staff upload resolution remarks and photographic evidence, after which the citizen is notified and invited to provide feedback.
 
 ### 1.3 Key Stakeholders and User Roles
@@ -128,7 +128,7 @@ The unnormalized relation exhibits massive data redundancy across several dimens
 ## 3. First Normal Form (1NF)
 
 ### 3.1 Requirements of 1NF
-A relation $R$ is in First Normal Form (1NF) if and only if:
+A relation *R* is in First Normal Form (1NF) if and only if:
 1. All underlying attribute domains contain only **atomic (indivisible)** values.
 2. There are **no repeating groups** or multi-valued attributes stored within a single tuple.
 3. Each record is uniquely identifiable through a well-defined primary key.
@@ -207,9 +207,9 @@ While 1NF ensures all attribute values are atomic and individual tuples are uniq
 ## 4. Second Normal Form (2NF)
 
 ### 4.1 Requirements of 2NF
-A relation $R$ is in Second Normal Form (2NF) if and only if:
-1. $R$ is in First Normal Form (1NF).
-2. Every **non-prime attribute** is **fully functionally dependent** on every candidate key of $R$.
+A relation *R* is in Second Normal Form (2NF) if and only if:
+1. *R* is in First Normal Form (1NF).
+2. Every **non-prime attribute** is **fully functionally dependent** on every candidate key of *R*.
 
 That is, no non-prime attribute may depend on a proper subset of any candidate key (elimination of **partial dependencies**). If a relation's candidate keys consist of single attributes, the relation is automatically in 2NF. 2NF violations emerge exclusively in relations with composite candidate keys.
 
@@ -297,13 +297,13 @@ R_2 = {complaint_id, officer_email, assigned_at}
 ## 5. Third Normal Form (3NF)
 
 ### 5.1 Requirements of 3NF
-A relation $R$ is in Third Normal Form (3NF) if and only if:
-1. $R$ is in Second Normal Form (2NF).
-2. For every non-trivial functional dependency $X \to Y$ holding in $R$, at least one of the following conditions is satisfied:
-   - $X$ is a **superkey** of $R$, OR
-   - $Y$ is a **prime attribute** of $R$ (each attribute in $Y$ is a member of some candidate key of $R$).
+A relation *R* is in Third Normal Form (3NF) if and only if:
+1. *R* is in Second Normal Form (2NF).
+2. For every non-trivial functional dependency *X* → *Y* holding in *R*, at least one of the following conditions is satisfied:
+   - *X* is a **superkey** of *R*, OR
+   - *Y* is a **prime attribute** of *R* (each attribute in *Y* is a member of some candidate key of *R*).
 
-Equivalently, 3NF requires that no non-prime attribute is **transitively dependent** on any candidate key ($X \to Z$ via $X \to Y$ and $Y \to Z$, where neither $Y \to X$ nor $Z \subseteq Y$).
+Equivalently, 3NF requires that no non-prime attribute is **transitively dependent** on any candidate key (*X* → *Z* via *X* → *Y* and *Y* → *Z*, where neither *Y* → *X* nor *Z* ⊆ *Y*).
 
 ### 5.2 Identifying Transitive Dependencies in 2NF Relations
 
@@ -345,7 +345,7 @@ To achieve 3NF, we extract the determinant and its dependent attributes into sep
 
 1. **Extraction of Users:**
    ```text
-   USERS(user_id [PK], name, email [UQ], phone, role, password_hash, created_at, updated_at)
+   USERS(user_id [PK], name, email [UQ], phone, role, password_hash, department_id [FK], created_at, updated_at)
    ```
    Primary Key: `user_id`. Alternate Key: `email`.
    All citizen profile attributes are isolated here.
@@ -391,10 +391,10 @@ To achieve 3NF, we extract the determinant and its dependent attributes into sep
 ## 6. Boyce-Codd Normal Form (BCNF)
 
 ### 6.1 Requirements of BCNF
-A relation $R$ is in Boyce-Codd Normal Form (BCNF) if and only if:
-- For every non-trivial functional dependency $X \to Y$ holding in $R$, the determinant $X$ is a **superkey** of $R$.
+A relation *R* is in Boyce-Codd Normal Form (BCNF) if and only if:
+- For every non-trivial functional dependency *X* → *Y* holding in *R*, the determinant *X* is a **superkey** of *R*.
 
-BCNF is strictly stronger than 3NF. The difference lies in 3NF's relaxation clause: in 3NF, $X \to Y$ is permitted if $Y$ is a prime attribute, even when $X$ is not a superkey. BCNF disallows this exception completely. Therefore, every BCNF relation is in 3NF, but a 3NF relation with overlapping candidate keys may violate BCNF.
+BCNF is strictly stronger than 3NF. The difference lies in 3NF's relaxation clause: in 3NF, *X* → *Y* is permitted if *Y* is a prime attribute, even when *X* is not a superkey. BCNF disallows this exception completely. Therefore, every BCNF relation is in 3NF, but a 3NF relation with overlapping candidate keys may violate BCNF.
 
 ### 6.2 Detailed Municipal Case Study: 3NF Relation Violating BCNF
 Consider a municipal administrative requirement for field verification:
@@ -451,78 +451,78 @@ All attributes in the relation are prime.
 ### 6.4 BCNF Decomposition and Trade-off Analysis
 To eliminate the BCNF violation, we decompose `WARD_INSPECTION_LEAD` using the violating functional dependency `FD_2`:
 
-1. **Relation 1 ($R_1$):** Extract the violating determinant and its dependent attributes:
+1. **Relation 1 (*R₁*):** Extract the violating determinant and its dependent attributes:
    ```text
    STAFF_DEPARTMENT(officer_id [PK], department_id)
    ```
    - Functional Dependency: `{officer_id} → {department_id}`.
    - Candidate Key: `{officer_id}`.
-   - Determinant `{officer_id}` is a superkey. $\implies$ **$R_1$ is in BCNF.**
+   - Determinant `{officer_id}` is a superkey. ⟹ ***R₁* is in BCNF.**
 
-2. **Relation 2 ($R_2$):** Retain the determinant with the remaining attributes:
+2. **Relation 2 (*R₂*):** Retain the determinant with the remaining attributes:
    ```text
    WARD_OFFICER(ward_id [PK], officer_id [PK])
    ```
    - Candidate Key: `{ward_id, officer_id}`.
-   - Only trivial FDs exist. $\implies$ **$R_2$ is in BCNF.**
+   - Only trivial FDs exist. ⟹ ***R₂* is in BCNF.**
 
 #### Trade-Off Analysis (Dependency Preservation vs. BCNF):
-- In $R_1$, `FD_2` is preserved.
-- In $R_2$, no non-trivial FDs exist.
+- In *R₁*, `FD_2` is preserved.
+- In *R₂*, no non-trivial FDs exist.
 - Notice that the original `FD_1`: `{ward_id, department_id} → {officer_id}` spans across both relations and cannot be checked within a single table without a join.
 - In CivicSync's practical system design, department membership is modeled as an intrinsic property of the officer (`users.department_id`), while complaint assignment is handled per complaint (`complaint_assignments`) rather than by static ward locks. This natural decomposition satisfies BCNF and avoids the anomaly cleanly.
 
 ### 6.5 Systematic BCNF Verification of All Core CivicSync Relations
-We now systematically review the core tables in the CivicSync schema to verify that every non-trivial functional dependency $X \to Y$ has a superkey as its determinant $X$:
+We now systematically review the core tables in the CivicSync schema to verify that every non-trivial functional dependency *X* → *Y* has a superkey as its determinant *X*:
 
 1. **`users`**:
    - `{user_id} → {name, email, phone, role, password_hash, department_id, created_at, updated_at}`
    - `{email} → {user_id, name, phone, role, password_hash, department_id, created_at, updated_at}`
-   - Both determinants `{user_id}` and `{email}` are candidate keys (superkeys). $\implies$ **Satisfies BCNF.**
+   - Both determinants `{user_id}` and `{email}` are candidate keys (superkeys). ⟹ **Satisfies BCNF.**
 
 2. **`departments`**:
    - `{department_id} → {name, contact_email, contact_phone, created_at}`
    - `{name} → {department_id, contact_email, contact_phone, created_at}`
-   - Determinants are superkeys. $\implies$ **Satisfies BCNF.**
+   - Determinants are superkeys. ⟹ **Satisfies BCNF.**
 
 3. **`categories`**:
    - `{category_id} → {name, description, department_id, default_priority, sla_hours}`
    - `{name} → {category_id, description, department_id, default_priority, sla_hours}`
-   - Determinants are superkeys. $\implies$ **Satisfies BCNF.**
+   - Determinants are superkeys. ⟹ **Satisfies BCNF.**
 
 4. **`wards`**:
    - `{ward_id} → {ward_number, ward_name, zone_name}`
    - `{ward_number} → {ward_id, ward_name, zone_name}`
-   - Determinants are superkeys. $\implies$ **Satisfies BCNF.**
+   - Determinants are superkeys. ⟹ **Satisfies BCNF.**
 
 5. **`complaints`**:
    - `{complaint_id} → {citizen_id, category_id, ward_id, title, description, latitude, longitude, landmark, status, priority, created_at, updated_at}`
-   - Determinant is the sole candidate key (superkey). $\implies$ **Satisfies BCNF.**
+   - Determinant is the sole candidate key (superkey). ⟹ **Satisfies BCNF.**
 
 6. **`complaint_images`**:
    - `{image_id} → {complaint_id, image_url, caption, uploaded_at}`
    - `{image_url} → {image_id, complaint_id, caption, uploaded_at}`
-   - Determinants are superkeys. $\implies$ **Satisfies BCNF.**
+   - Determinants are superkeys. ⟹ **Satisfies BCNF.**
 
 7. **`complaint_assignments`**:
    - Candidate Key: `{assignment_id}`
-   - Determinant `{assignment_id}` is a superkey. $\implies$ **Satisfies BCNF.**
+   - Determinant `{assignment_id}` is a superkey. ⟹ **Satisfies BCNF.**
 
 8. **`complaint_status_history`**:
    - Primary Key: `{history_id}`
-   - Determinant `{history_id}` is a superkey. $\implies$ **Satisfies BCNF.**
+   - Determinant `{history_id}` is a superkey. ⟹ **Satisfies BCNF.**
 
 9. **`complaint_comments`**:
    - Primary Key: `{comment_id}`
-   - Determinant `{comment_id}` is a superkey. $\implies$ **Satisfies BCNF.**
+   - Determinant `{comment_id}` is a superkey. ⟹ **Satisfies BCNF.**
 
 10. **`duplicate_complaints`**:
     - Candidate Key: `{duplicate_complaint_id}`
-    - Determinant `{duplicate_complaint_id}` is a superkey. $\implies$ **Satisfies BCNF.**
+    - Determinant `{duplicate_complaint_id}` is a superkey. ⟹ **Satisfies BCNF.**
 
 11. **`notifications`**:
     - Primary Key: `{notification_id}`
-    - Determinant `{notification_id}` is a superkey. $\implies$ **Satisfies BCNF.**
+    - Determinant `{notification_id}` is a superkey. ⟹ **Satisfies BCNF.**
 
 ---
 
@@ -656,7 +656,7 @@ Represents official municipal administrative departments.
   - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
 - **Constraints:**
   - `CHECK (char_length(name) >= 3)`
-  - `CHECK (contact_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')`
+  - `CHECK (contact_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\)`
 
 #### Table 2: `wards`
 Represents municipal electoral and administrative zones.
@@ -683,6 +683,191 @@ Represents citizens, field staff, and administrative personnel.
 - **Constraints:**
   - `CHECK (char_length(name) >= 2)`
   - `CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+\)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 2: `wards`
+Represents municipal electoral and administrative zones.
+- **Attributes:**
+  - `ward_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `ward_number`: `VARCHAR(20) NOT NULL UNIQUE`
+  - `ward_name`: `VARCHAR(100) NOT NULL`
+  - `zone_name`: `VARCHAR(100) NOT NULL`
+- **Constraints:**
+  - `CHECK (char_length(ward_number) >= 1)`
+
+#### Table 3: `users`
+Represents citizens, field staff, and administrative personnel.
+- **Attributes:**
+  - `user_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `name`: `VARCHAR(100) NOT NULL`
+  - `email`: `VARCHAR(255) NOT NULL UNIQUE`
+  - `phone`: `VARCHAR(20) NOT NULL`
+  - `password_hash`: `VARCHAR(255) NOT NULL`
+  - `role`: `user_role NOT NULL DEFAULT 'CITIZEN'`
+  - `department_id`: `INT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(name) >= 2)`
+  - `CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\)`
   - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
 
 #### Table 4: `categories`
@@ -797,6 +982,1648 @@ A critical design decision in CivicSync is avoiding the storage of raw image bin
 - Media files are uploaded to cloud object storage (e.g., S3).
 - The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
 - A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+$')`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+\)` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 2: `wards`
+Represents municipal electoral and administrative zones.
+- **Attributes:**
+  - `ward_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `ward_number`: `VARCHAR(20) NOT NULL UNIQUE`
+  - `ward_name`: `VARCHAR(100) NOT NULL`
+  - `zone_name`: `VARCHAR(100) NOT NULL`
+- **Constraints:**
+  - `CHECK (char_length(ward_number) >= 1)`
+
+#### Table 3: `users`
+Represents citizens, field staff, and administrative personnel.
+- **Attributes:**
+  - `user_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `name`: `VARCHAR(100) NOT NULL`
+  - `email`: `VARCHAR(255) NOT NULL UNIQUE`
+  - `phone`: `VARCHAR(20) NOT NULL`
+  - `password_hash`: `VARCHAR(255) NOT NULL`
+  - `role`: `user_role NOT NULL DEFAULT 'CITIZEN'`
+  - `department_id`: `INT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(name) >= 2)`
+  - `CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+$')`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+$')`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 2: `wards`
+Represents municipal electoral and administrative zones.
+- **Attributes:**
+  - `ward_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `ward_number`: `VARCHAR(20) NOT NULL UNIQUE`
+  - `ward_name`: `VARCHAR(100) NOT NULL`
+  - `zone_name`: `VARCHAR(100) NOT NULL`
+- **Constraints:**
+  - `CHECK (char_length(ward_number) >= 1)`
+
+#### Table 3: `users`
+Represents citizens, field staff, and administrative personnel.
+- **Attributes:**
+  - `user_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `name`: `VARCHAR(100) NOT NULL`
+  - `email`: `VARCHAR(255) NOT NULL UNIQUE`
+  - `phone`: `VARCHAR(20) NOT NULL`
+  - `password_hash`: `VARCHAR(255) NOT NULL`
+  - `role`: `user_role NOT NULL DEFAULT 'CITIZEN'`
+  - `department_id`: `INT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(name) >= 2)`
+  - `CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+\)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+$')`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+\)` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+$')`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+  - `CHECK (role = 'CITIZEN' OR department_id IS NOT NULL)` (Staff and Admins must be associated with a department).
+
+#### Table 4: `categories`
+Defines issue classifications with default SLA and department routing.
+- **Attributes:**
+  - `category_id`: `INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE`
+  - `description`: `TEXT NOT NULL`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `default_priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `sla_hours`: `INT NOT NULL DEFAULT 72`
+- **Constraints:**
+  - `CHECK (sla_hours > 0)`
+
+#### Table 5: `complaints`
+The central operational entity recording civic issues.
+- **Attributes:**
+  - `complaint_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `citizen_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `category_id`: `INT NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT`
+  - `ward_id`: `INT NOT NULL REFERENCES wards(ward_id) ON DELETE RESTRICT`
+  - `title`: `VARCHAR(200) NOT NULL`
+  - `description`: `TEXT NOT NULL`
+  - `latitude`: `NUMERIC(9,6) NOT NULL`
+  - `longitude`: `NUMERIC(9,6) NOT NULL`
+  - `landmark`: `VARCHAR(255) NULL`
+  - `status`: `complaint_status NOT NULL DEFAULT 'REPORTED'`
+  - `priority`: `complaint_priority NOT NULL DEFAULT 'MEDIUM'`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (latitude BETWEEN -90.000000 AND 90.000000)`
+  - `CHECK (longitude BETWEEN -180.000000 AND 180.000000)`
+  - `CHECK (char_length(title) >= 5)`
+
+#### Table 6: `complaint_images`
+Photographic evidence supporting issue reporting or resolution verification.
+- **Attributes:**
+  - `image_id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `image_url`: `VARCHAR(512) NOT NULL UNIQUE`
+  - `caption`: `VARCHAR(255) NULL`
+  - `uploaded_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (image_url ~* '^https?://.+\)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+$')` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)`
+
+#### Table 7: `complaint_assignments`
+Formal delegation of complaints to departments and field officers.
+- **Attributes:**
+  - `assignment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `department_id`: `INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT`
+  - `assigned_to_officer_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `assigned_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `notes`: `TEXT NULL`
+  - `assigned_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+#### Table 8: `complaint_status_history`
+Immutable audit log recording every lifecycle milestone.
+- **Attributes:**
+  - `history_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `previous_status`: `complaint_status NULL`
+  - `new_status`: `complaint_status NOT NULL`
+  - `changed_by_user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `remarks`: `TEXT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (previous_status IS DISTINCT FROM new_status)`
+
+#### Table 9: `complaint_comments`
+Discussion and official communication thread for complaints.
+- **Attributes:**
+  - `comment_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT`
+  - `comment_text`: `TEXT NOT NULL`
+  - `is_official_update`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (char_length(comment_text) >= 1)`
+
+#### Table 10: `duplicate_complaints`
+Relationship linking redundant complaints to a canonical issue ticket.
+- **Attributes:**
+  - `duplicate_complaint_id`: `UUID PRIMARY KEY REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `canonical_complaint_id`: `UUID NOT NULL REFERENCES complaints(complaint_id) ON DELETE CASCADE`
+  - `detected_by_user_id`: `UUID NULL REFERENCES users(user_id) ON DELETE SET NULL`
+  - `confidence_score`: `NUMERIC(4,3) NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Constraints:**
+  - `CHECK (duplicate_complaint_id <> canonical_complaint_id)` (A complaint cannot be marked duplicate of itself).
+  - `CHECK (confidence_score IS NULL OR (confidence_score >= 0.000 AND confidence_score <= 1.000))`
+
+#### Table 11: `notifications`
+Dispatched user alerts regarding status transitions, comments, and task assignments.
+- **Attributes:**
+  - `notification_id`: `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY`
+  - `user_id`: `UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE`
+  - `complaint_id`: `UUID NULL REFERENCES complaints(complaint_id) ON DELETE SET NULL`
+  - `title`: `VARCHAR(150) NOT NULL`
+  - `message`: `TEXT NOT NULL`
+  - `is_read`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
+## 10. Database Design Decisions and Integrity Constraints
+
+### 10.1 Decoupled Media Storage Architecture
+A critical design decision in CivicSync is avoiding the storage of raw image binaries (`BYTEA` / BLOBs) directly inside PostgreSQL tables. Storing multi-megabyte photographic files in the database degrades vacuum operations, bloats table storage, exhausts memory buffers, and impairs backup and restoration speeds. Instead, CivicSync adopts an enterprise-standard decoupled architecture:
+- Media files are uploaded to cloud object storage (e.g., S3).
+- The relational table `complaint_images` stores validated URLs (`VARCHAR(512)`), metadata captions, and upload timestamps.
+- A regex check constraint `CHECK (image_url ~* '^https?://.+\)` guarantees URI format validity at the persistence tier.
+
+### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
+Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
+- Precision of 6 decimal places yields spatial accuracy of approximately 0.11 meters at the equator.
+- Strict check constraints enforce spherical coordinate limits:
+  ```sql
+  CHECK (latitude BETWEEN -90.000000 AND 90.000000)
+  CHECK (longitude BETWEEN -180.000000 AND 180.000000)
+  ```
+- This numeric representation is lightweight, indexable, and converts cleanly into PostGIS spatial geometry points (`ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`) when geospatial proximity queries are introduced in subsequent modules.
+
+### 10.3 Non-Cyclic Duplicate Complaint Hierarchy
+Duplicate complaints arise when multiple citizens report the same infrastructure defect (e.g., the same pothole on a major thoroughfare). CivicSync resolves this via `duplicate_complaints`:
+- `duplicate_complaint_id` is both the primary key of `duplicate_complaints` and a foreign key referencing `complaints.complaint_id`.
+- This ensures that a complaint can be marked as a duplicate at most once.
+- A database-level check constraint `CHECK (duplicate_complaint_id <> canonical_complaint_id)` prevents self-referential duplication.
+- When querying active issues, municipal officers can filter out duplicate child records while aggregating community impact counts through canonical master complaints.
+
+### 10.4 Append-Only Audit Logging for Administrative Accountability
+Municipal transparency mandates an immutable record of every lifecycle update:
+- In `complaint_status_history`, status transitions are appended sequentially with the modifying user's identifier and timestamp.
+- A database check constraint `CHECK (previous_status IS DISTINCT FROM new_status)` guarantees that redundant or null-state updates cannot be inserted.
+- Deleting a complaint cascades (`ON DELETE CASCADE`) to its audit history, maintaining referential hygiene without orphan records.
+
+### 10.5 Referential Actions and Data Safety
+The schema employs deliberate referential action strategies:
+- **`ON DELETE RESTRICT`:** Applied to foundational catalogs (`departments`, `wards`, `categories`, and `users`). A department or user cannot be accidentally deleted if active complaints or assignments reference them.
+- **`ON DELETE CASCADE`:** Applied to strictly dependent child entities (`complaint_images`, `complaint_assignments`, `complaint_status_history`, `complaint_comments`). Removing a test or purged complaint automatically cleans up its associated logs.
+- **`ON DELETE SET NULL`:** Applied to optional delegation references (`assigned_to_officer_id`, `detected_by_user_id`). If an officer account is deactivated, existing assignments preserve their historical departmental link while unsetting the individual officer reference.
+
+---
+
+## 11. Conclusion
+
+The relational normalization of the CivicSync database from an unnormalized monolithic representation through 1NF, 2NF, 3NF, and BCNF achieves significant structural and operational advantages:
+
+1. **Elimination of Structural Redundancy:** By isolating independent municipal entities (`departments`, `wards`, `categories`, `users`) from transient transactional events (`complaints`, `assignments`, `status_history`), repetitive string storage is eliminated. This significantly reduces disk consumption and buffer pool memory footprint in PostgreSQL.
+2. **Total Elimination of Relational Anomalies:**
+   - *Insertion:* Administrative infrastructure (departments, wards, categories) can be created and managed without requiring artificial complaint submissions.
+   - *Update:* Any change to a citizen's contact details, department leadership, or category SLA occurs in exactly one row within one table.
+   - *Deletion:* Pruning old complaint logs or removing duplicate reports leaves parent municipal records intact.
+3. **Rigorous Enforcement of Business Integrity:** The schema leverages PostgreSQL native features—including ENUM domain constraints, geospatial numeric bounding checks, regex email validations, and foreign key referential integrity (`ON DELETE RESTRICT`, `ON DELETE CASCADE`, `ON DELETE SET NULL`)—to enforce business rules at the persistence tier rather than relying solely on application middleware.
+4. **Architectural Scalability:** The separation of audit histories (`complaint_status_history`), media records (`complaint_images`), and threaded updates (`complaint_comments`) ensures that high-volume read operations on the primary `complaints` table remain performant, laying a solid foundation for subsequent indexing, spatial querying with PostGIS, and analytics dashboard aggregation.
+5. **Seamless Foundation for Subsequent Coursework:** This normalized schema serves as the exact foundation for the CP2 Entity-Relationship Diagram (`dbms/02_er_diagram.png`) and subsequent physical DDL scripts, ensuring 100% architectural consistency across all deliverables.
+)` guarantees URI format validity at the persistence tier.
 
 ### 10.2 Geospatial Coordinate Precision and PostGIS Compatibility
 Civic issues require geographic location pinning to facilitate spatial clustering and ward allocation. CivicSync uses `NUMERIC(9,6)` for both latitude and longitude:
