@@ -35,7 +35,7 @@
         <rect width="980" height="108" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
         <text class="legend-title" x="18" y="22">ER NOTATION REFERENCE &amp; CARDINALITY GUIDE (CROW'S FOOT)</text>
         
-        <!-- Key Badges Legend -->
+        
         <g transform="translate(18, 36)">
             <rect width="26" height="16" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
             <text class="badge-text" x="13" y="11.5" fill="#92400e" text-anchor="middle">PK</text>
@@ -54,27 +54,27 @@
             <text class="legend-text" x="488" y="12.5">Identifying Foreign Key</text>
         </g>
 
-        <!-- Cardinality Symbols Legend -->
+        
         <g transform="translate(18, 74)">
-            <!-- Exactly 1 -->
+            
             <line x1="0" y1="12" x2="35" y2="12" stroke="#334155" stroke-width="1.8"/>
             <line x1="18" y1="5" x2="18" y2="19" stroke="#334155" stroke-width="1.8"/>
             <line x1="24" y1="5" x2="24" y2="19" stroke="#334155" stroke-width="1.8"/>
             <text class="legend-text" x="45" y="15">Exactly 1 (Mandatory)</text>
 
-            <!-- 0 or 1 -->
+            
             <line x1="170" y1="12" x2="205" y2="12" stroke="#334155" stroke-width="1.8"/>
             <circle cx="184" cy="12" r="4.5" fill="#ffffff" stroke="#334155" stroke-width="1.8"/>
             <line x1="196" y1="5" x2="196" y2="19" stroke="#334155" stroke-width="1.8"/>
             <text class="legend-text" x="215" y="15">0 or 1 (Optional)</text>
 
-            <!-- 1 or More -->
+            
             <line x1="330" y1="12" x2="370" y2="12" stroke="#334155" stroke-width="1.8"/>
             <line x1="344" y1="5" x2="344" y2="19" stroke="#334155" stroke-width="1.8"/>
             <path d="M 370,5 L 354,12 L 370,19" fill="none" stroke="#334155" stroke-width="1.8"/>
             <text class="legend-text" x="380" y="15">1 or More (Mandatory Many)</text>
 
-            <!-- 0 or More -->
+            
             <line x1="560" y1="12" x2="600" y2="12" stroke="#334155" stroke-width="1.8"/>
             <circle cx="574" cy="12" r="4.5" fill="#ffffff" stroke="#334155" stroke-width="1.8"/>
             <path d="M 600,5 L 584,12 L 600,19" fill="none" stroke="#334155" stroke-width="1.8"/>
