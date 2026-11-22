@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CivicSync: Municipal civic issue reporting and tracking platform." />
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <title>CivicSync | Municipal Civic Issue Reporting Platform</title>
+
+  <!-- Leaflet GIS Stylesheet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- CivicSync Unified Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Navigation Header Mount Point -->
+  <header id="navbar-root"></header>
+
+  <!-- Dynamic Page View Mount Point -->
+  <main id="app-root"></main>
+
+  <!-- Leaflet GIS Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- API Helper -->
+  <script src="/js/api.js"></script>
+
+  <!-- Reusable UI Components -->
+  <script src="/js/components/StatusBadge.js"></script>
+  <script src="/js/components/Navbar.js"></script>
+  <script src="/js/components/IssueCard.js"></script>
+  <script src="/js/components/IssueMap.js"></script>
+
+  <!-- Page Views -->
+  <script src="/js/views/HomeView.js"></script>
+  <script src="/js/views/ExploreView.js"></script>
+  <script src="/js/views/MapView.js"></script>
+  <script src="/js/views/CitizenReportView.js"></script>
+  <script src="/js/views/CitizenMyReportsView.js"></script>
+  <script src="/js/views/IssueDetailView.js"></script>
+  <script src="/js/views/AdminDashboardView.js"></script>
+  <script src="/js/views/AuthViews.js"></script>
+  <script src="/js/views/DbmsView.js"></script>
+
+  <!-- Main Router & App Initialization -->
+  <script src="/js/app.js"></script>
+</body>
+</html>
