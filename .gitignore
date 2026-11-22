@@ -147,3 +147,16 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Database
+*.db
+*.db-journal
+.DS_Store
+backend/node_modules
+
+backend/dbms
+/prisma
+backend/uploads/*
+!backend/uploads/.gitkeep
+package-lock.json
+
