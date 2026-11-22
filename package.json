@@ -7,8 +7,13 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node --watch backend/server.js",
-    "seed": "npm --prefix backend run seed",
-    "prisma:generate": "npm --prefix backend run prisma:generate"
+    "seed": "node backend/prisma/seed.js",
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "schema": "backend/prisma/schema.prisma",
+    "seed": "node backend/prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

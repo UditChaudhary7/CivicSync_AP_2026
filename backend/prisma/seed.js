@@ -17,7 +17,23 @@ function calculatePriority(severity, upvotes, createdAt) {
 async function main() {
   console.log('Seeding database with Prisma ORM...');
 
-  // Clean existing data for idempotency
+  // Clean DBMS relational child tables first to respect foreign keys
+  try {
+    await prisma.$executeRawUnsafe(`DELETE FROM complaint_status_history;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM complaint_assignments;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM complaint_comments;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM duplicate_complaints;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM complaint_images;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM notifications;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM complaints;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM categories;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM wards;`);
+    await prisma.$executeRawUnsafe(`DELETE FROM departments;`);
+  } catch (err) {
+    // Ignore if tables do not exist yet
+  }
+
+  // Clean existing Prisma data for idempotency
   await prisma.upvote.deleteMany();
   await prisma.issue.deleteMany();
   await prisma.user.deleteMany();
@@ -49,17 +65,6 @@ async function main() {
 
   // 3. Seed DBMS Normalized Relational Tables (departments, wards, categories)
   try {
-    await prisma.$executeRawUnsafe(`DELETE FROM complaint_status_history;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM complaint_assignments;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM complaint_comments;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM duplicate_complaints;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM complaint_images;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM notifications;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM complaints;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM categories;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM wards;`);
-    await prisma.$executeRawUnsafe(`DELETE FROM departments;`);
-
     // Seed Departments
     await prisma.$executeRawUnsafe(`
       INSERT INTO departments (department_id, name, contact_email, contact_phone) VALUES
