@@ -1,0 +1,60 @@
+// prisma/schema.prisma - Prisma ORM Schema for SQLite
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      String   @default("CITIZEN") // "CITIZEN" or "ADMIN"
+  createdAt DateTime @default(now())
+
+  // 1-to-many relations
+  issues    Issue[]
+  upvotes   Upvote[]
+}
+
+model Issue {
+  id             Int      @id @default(autoincrement())
+  trackingNumber String   @unique
+  title          String
+  description    String
+  category       String
+  severity       String   // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  status         String   @default("REPORTED") // "REPORTED", "IN_PROGRESS", "RESOLVED"
+  latitude       Float
+  longitude      Float
+  address        String
+  photoUrl       String?
+  priority       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  // Foreign key relation to User
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 1-to-many relation to Upvotes
+  upvotes        Upvote[]
+}
+
+model Upvote {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  issueId   Int
+  createdAt DateTime @default(now())
+
+  // Foreign keys
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  // Constraint: One upvote per user per issue
+  @@unique([userId, issueId])
+}
