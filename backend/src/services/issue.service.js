@@ -1,0 +1,165 @@
+// src/services/issue.service.js - Issue CRUD, Prisma Relations, Pagination & Upvoting
+const prisma = require('../prisma');
+const { calculatePriorityScore } = require('./priority.service');
+
+// Retrieve paginated issues with Prisma relation filtering and sorting
+async function getIssuesList({ page = 1, limit = 20, category, status, severity, sortBy = 'priority' }) {
+  const take = Math.min(50, Math.max(1, parseInt(limit)));
+  const skip = (Math.max(1, parseInt(page)) - 1) * take;
+
+  const where = {};
+  if (category && category !== 'all') where.category = category.toLowerCase();
+  if (status && status !== 'all') where.status = status.toUpperCase();
+  if (severity && severity !== 'all') where.severity = severity.toUpperCase();
+
+  const orderBy = sortBy === 'newest' ? { createdAt: 'desc' } : { priority: 'desc' };
+
+  // Parallel query for count and paginated items
+  const [total, issues] = await Promise.all([
+    prisma.issue.count({ where }),
+    prisma.issue.findMany({
+      where,
+      skip,
+      take,
+      orderBy,
+      include: {
+        user: { select: { fullName: true } },
+        _count: { select: { upvotes: true } }
+      }
+    })
+  ]);
+
+  return {
+    issues,
+    pagination: {
+      total,
+      page: parseInt(page),
+      limit: take,
+      totalPages: Math.ceil(total / take)
+    }
+  };
+}
+
+// Retrieve single issue details with user and upvote relations
+async function getIssueDetails(identifier) {
+  const isNumeric = !isNaN(identifier);
+  const where = isNumeric ? { id: parseInt(identifier) } : { trackingNumber: identifier };
+
+  return prisma.issue.findUnique({
+    where,
+    include: {
+      user: { select: { fullName: true, email: true } },
+      _count: { select: { upvotes: true } }
+    }
+  });
+}
+
+// Retrieve all issues reported by a specific citizen
+async function getCitizenIssues(userId) {
+  return prisma.issue.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: { select: { upvotes: true } }
+    }
+  });
+}
+
+// Create a new civic issue complaint using Prisma create
+async function createNewIssue({ title, description, category, severity, latitude, longitude, address, photoUrl, userId }) {
+  const trackingNumber = `REP-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+  const sevUpper = severity.toUpperCase();
+  const initialPriority = calculatePriorityScore(sevUpper, 0, new Date());
+
+  return prisma.issue.create({
+    data: {
+      trackingNumber,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.toLowerCase(),
+      severity: sevUpper,
+      status: 'REPORTED',
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      address: address ? address.trim() : 'Sonipat, Haryana',
+      photoUrl,
+      priority: initialPriority,
+      userId
+    },
+    include: {
+      user: { select: { fullName: true } }
+    }
+  });
+}
+
+// Toggle citizen upvote (one vote per user per issue via @@unique constraint)
+async function toggleIssueUpvote(issueId, userId) {
+  const parsedIssueId = parseInt(issueId);
+
+  const existingVote = await prisma.upvote.findUnique({
+    where: {
+      userId_issueId: { userId, issueId: parsedIssueId }
+    }
+  });
+
+  let hasUpvoted = false;
+  if (existingVote) {
+    await prisma.upvote.delete({ where: { id: existingVote.id } });
+  } else {
+    await prisma.upvote.create({
+      data: { userId, issueId: parsedIssueId }
+    });
+    hasUpvoted = true;
+  }
+
+  // Recalculate and update priority score
+  const [upvotesCount, issue] = await Promise.all([
+    prisma.upvote.count({ where: { issueId: parsedIssueId } }),
+    prisma.issue.findUnique({ where: { id: parsedIssueId } })
+  ]);
+
+  const newPriority = calculatePriorityScore(issue.severity, upvotesCount, issue.createdAt);
+  const updatedIssue = await prisma.issue.update({
+    where: { id: parsedIssueId },
+    data: { priority: newPriority }
+  });
+
+  return {
+    hasUpvoted,
+    has_upvoted: hasUpvoted,
+    upvotes: upvotesCount,
+    upvotesCount,
+    priority: updatedIssue.priority
+  };
+}
+
+// Update issue status and return updated record
+async function updateStatus(issueId, newStatus) {
+  const parsedIssueId = parseInt(issueId);
+  return prisma.issue.update({
+    where: { id: parsedIssueId },
+    data: { status: newStatus.toUpperCase() }
+  });
+}
+
+// Aggregate counts for the municipal administrator dashboard
+async function getDashboardMetrics() {
+  const [total, reported, inProgress, resolved] = await Promise.all([
+    prisma.issue.count(),
+    prisma.issue.count({ where: { status: 'REPORTED' } }),
+    prisma.issue.count({ where: { status: 'IN_PROGRESS' } }),
+    prisma.issue.count({ where: { status: 'RESOLVED' } })
+  ]);
+
+  return { total, reported, in_progress: inProgress, resolved };
+}
+
+module.exports = {
+  getIssuesList,
+  getIssueDetails,
+  getCitizenIssues,
+  createNewIssue,
+  toggleIssueUpvote,
+  updateStatus,
+  getDashboardMetrics
+};
