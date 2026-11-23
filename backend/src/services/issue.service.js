@@ -4,7 +4,7 @@ const { calculatePriorityScore } = require('./priority.service');
 const slaService = require('./sla.service');
 
 // Retrieve paginated issues with Prisma relation filtering and sorting
-async function getIssuesList({ page = 1, limit = 20, category, status, severity, sortBy = 'priority' }) {
+async function getIssuesList({ page = 1, limit = 20, category, status, severity, sortBy = 'priority', search, ward }) {
   const take = Math.min(50, Math.max(1, parseInt(limit)));
   const skip = (Math.max(1, parseInt(page)) - 1) * take;
 
@@ -13,7 +13,40 @@ async function getIssuesList({ page = 1, limit = 20, category, status, severity,
   if (status && status !== 'all') where.status = status.toUpperCase();
   if (severity && severity !== 'all') where.severity = severity.toUpperCase();
 
-  const orderBy = sortBy === 'newest' ? { createdAt: 'desc' } : { priority: 'desc' };
+  // Full-text search across title, description, address, and tracking number
+  if (search && search.trim()) {
+    const q = search.trim();
+    where.OR = [
+      { title: { contains: q } },
+      { description: { contains: q } },
+      { address: { contains: q } },
+      { trackingNumber: { contains: q } }
+    ];
+  }
+
+  // Ward filter matching Sonipat municipal administrative zones
+  if (ward && ward !== 'all') {
+    const wardTerms = {
+      ward_1: ['Sector 14', 'Model Town'],
+      ward_2: ['Old DC', 'Subhash Chowk', 'Geeta Bhawan', 'Kakroi Road'],
+      ward_3: ['Railway Station', 'Atlas Chowk', 'Atlas Road'],
+      ward_4: ['Murthal Road', 'Sector 15', 'DCRUST'],
+      ward_5: ['Sector 23', 'Rathdhana']
+    };
+    const terms = wardTerms[ward.toLowerCase()];
+    if (terms) {
+      where.AND = where.AND || [];
+      where.AND.push({
+        OR: terms.map(term => ({ address: { contains: term } }))
+      });
+    }
+  }
+
+  let orderBy = { priority: 'desc' };
+  if (sortBy === 'newest') orderBy = { createdAt: 'desc' };
+  else if (sortBy === 'oldest') orderBy = { createdAt: 'asc' };
+  else if (sortBy === 'most_upvoted') orderBy = { upvotes: { _count: 'desc' } };
+  else if (sortBy === 'priority_asc') orderBy = { priority: 'asc' };
 
   // Parallel query for count and paginated items
   const [total, issues] = await Promise.all([
