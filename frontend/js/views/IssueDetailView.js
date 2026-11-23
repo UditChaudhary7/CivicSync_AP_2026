@@ -55,7 +55,7 @@ window.IssueDetailView = {
       adminControlsHtml = `
         <div class="card" style="margin-top:20px; background:#F8FAFC; border:1px solid #CBD5E1; padding:16px;">
           <h3 style="font-size:14px; font-weight:700; color:#0F172A; margin-bottom:8px;">Municipal Admin Actions</h3>
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
             <label style="font-size:12px; font-weight:600;">Update Status:</label>
             <select id="admin-status-select" class="form-select" style="width:160px; height:34px; font-size:12px;">
               <option value="reported" ${(issue.status || '').toLowerCase() === 'reported' ? 'selected' : ''}>Reported</option>
@@ -64,9 +64,38 @@ window.IssueDetailView = {
             </select>
             <button id="admin-btn-save-status" class="btn btn-primary btn-sm">Update Status</button>
           </div>
+          <div>
+            <input type="text" id="admin-status-remarks" class="form-input" placeholder="Resolution / action remarks (e.g. Dispatched PWD road repair crew)" style="height:34px; font-size:12px; width:100%;" />
+          </div>
         </div>
       `;
     }
+
+    const historyItems = issue.status_history || [];
+    const timelineHtml = `
+      <div style="margin-top:24px; border-top:1px solid var(--color-border-subtle); padding-top:16px;">
+        <h4 style="font-size:13px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary); margin-bottom:12px;">Lifecycle Audit Timeline</h4>
+        <div class="timeline-container" style="display:flex; flex-direction:column; gap:12px;">
+          ${historyItems.length === 0 ? '<div style="font-size:12px; color:var(--color-text-tertiary);">No status transitions logged yet.</div>' : historyItems.map((h, i) => `
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <div style="width:10px; height:10px; border-radius:50%; background:${h.new_status === 'RESOLVED' ? '#16A34A' : h.new_status === 'IN_PROGRESS' ? '#2563EB' : '#F59E0B'}; margin-top:4px; flex-shrink:0;"></div>
+              <div style="flex:1; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:10px 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <span style="font-size:12px; font-weight:700; color:#1E293B;">
+                    ${h.previous_status ? `${h.previous_status} → ` : ''}<strong>${h.new_status}</strong>
+                  </span>
+                  <span style="font-size:11px; color:#64748B;">${new Date(h.created_at).toLocaleString()}</span>
+                </div>
+                <div style="font-size:12px; color:#475569;">
+                  Action recorded by <strong>${window.api.escapeHtml(h.changed_by_name)}</strong> <span style="font-size:10px; background:#E2E8F0; padding:1px 6px; border-radius:3px; margin-left:4px;">${h.changed_by_role}</span>
+                </div>
+                ${h.remarks ? `<div style="font-size:12px; color:#0F172A; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:4px; padding:6px 10px; margin-top:6px; font-style:italic;">💬 "${window.api.escapeHtml(h.remarks)}"</div>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
 
     const html = `
       <div style="margin-bottom:12px;">
@@ -103,6 +132,7 @@ window.IssueDetailView = {
           </div>
 
           ${adminControlsHtml}
+          ${timelineHtml}
         </div>
 
         <!-- Right: Map & Location Metadata -->
@@ -156,12 +186,17 @@ window.IssueDetailView = {
     // Admin status update handler
     document.getElementById('admin-btn-save-status')?.addEventListener('click', async () => {
       const newStatus = document.getElementById('admin-status-select').value;
+      const remarks = document.getElementById('admin-status-remarks')?.value || '';
       try {
-        const res = await window.api.patch(`/admin/issues/${issue.id}/status`, { status: newStatus });
+        const res = await window.api.patch(`/admin/issues/${issue.id}/status`, { status: newStatus, remarks });
         if (res.success) {
           alert(`Status successfully updated to ${newStatus}`);
-          this.issueData.status = newStatus;
-          this.renderDetail();
+          // Refetch issue details to update timeline and badges
+          const reload = await window.api.get(`/issues/${issue.id}`);
+          if (reload.success && reload.data.issue) {
+            this.issueData = reload.data.issue;
+            this.renderDetail();
+          }
         } else {
           alert(res.message || 'Update failed');
         }
