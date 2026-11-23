@@ -110,10 +110,12 @@ CivicSyncDemo/
 | **Node.js Core Modules** | `server.js`, `src/events/statusEvents.js`, `src/middleware/upload.js` | `path.join` for safe directory paths; `events` (`EventEmitter`) to emit `statusChanged`; `fs.appendFile` to log status transitions to `logs/status.log`. |
 | **Express Middleware** | `server.js`, `src/middleware/*` | Built-in `express.json()`, `express.static()`, Multer file upload middleware, JWT authentication, and centralized error handler. |
 | **Express Router & MVC** | `src/routes/*`, `src/controllers/*`, `src/services/*` | Clean separation: routes define paths; controllers unpack `req` and send HTTP responses; services execute business logic and database queries. |
-| **Prisma ORM & CRUD** | `prisma/schema.prisma`, `src/prisma.js`, `src/services/issue.service.js` | Schema defines `User`, `Issue`, `Upvote` models; Prisma Client methods `create`, `findMany`, `findUnique`, `update`, `delete`, and `count`. |
-| **Prisma Relations & Features** | `src/services/issue.service.js`, `prisma/seed.js` | `include: { user: true }`, `_count: { select: { upvotes: true } }`, `skip`/`take` pagination, `orderBy` priority sorting, and `where` filtering. |
+| **Prisma ORM & CRUD** | `prisma/schema.prisma`, `src/prisma.js`, `src/services/issue.service.js` | Schema defines `User`, `Issue`, `Upvote`, `StatusHistory`, `Comment` models; Prisma Client methods `create`, `findMany`, `findUnique`, `update`, `delete`, and `count`. |
+| **Prisma Relations & Features** | `src/services/issue.service.js`, `prisma/seed.js` | `include: { user: true, statusHistory: true, comments: true }`, `_count: { select: { upvotes: true } }`, `skip`/`take` pagination, `orderBy` priority and relation sorting, and `where` search filtering. |
 | **Authentication (JWT & Bcrypt)** | `src/services/auth.service.js`, `src/middleware/auth.js` | `bcrypt.hash` and `bcrypt.compare` for passwords; `jwt.sign` issues token with 1-day expiry; `requireAuth` validates `Authorization: Bearer <token>`. |
 | **Role-Based Authorization** | `src/middleware/role.js`, `src/routes/admin.routes.js` | `requireRole("ADMIN")` intercepts requests and enforces 403 Forbidden for non-administrators. |
+| **Municipal SLA Engine** | `src/services/sla.service.js`, `src/controllers/admin.controller.js` | Dynamic calculation of category resolution deadlines (24h–72h) and SLA breach tracking. |
+| **CSV Streaming & Exports** | `src/controllers/admin.controller.js`, `src/routes/admin.routes.js` | RFC 4180 streaming CSV export of municipal complaint registers for field maintenance crews. |
 | **Leaflet GIS Integration** | `public/js/components/IssueMap.js` | Interactive map powered by OpenStreetMap tiles; color-coded pins based on severity and status. |
 
 ---
@@ -131,3 +133,9 @@ When a citizen enters a category and selects a map pin in `CitizenReportView.js`
 
 ### 4. How are Leaflet Map Markers drawn?
 The frontend initializes an interactive Leaflet map in `IssueMap.js` using free, keyless **OpenStreetMap** tile layers (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`). For each complaint returned by the backend, the script inspects the issue's severity and status to assign a CSS marker class: Red for Critical, Orange for High, Yellow for Medium, Blue for Low, and Green for Resolved. Custom HTML `L.divIcon` markers are positioned at the exact latitude and longitude coordinates. Clicking any marker reveals an interactive popup with tracking number, severity badge, and a link to view full complaint details.
+
+### 5. How does Municipal SLA Compliance & Breach Tracking work?
+Every complaint category is bound to a defined municipal Service Level Agreement (24h for streetlights and water leakages, 48h for road potholes and drainage, 72h for public infrastructure). In `sla.service.js`, target resolution deadlines are computed as `createdAt + slaHours`. If an issue remains unresolved past its deadline, the system automatically marks it as `BREACHED`, computes elapsed overdue hours, and alerts administrators via dashboard KPI counters and red warning badges on issue cards.
+
+### 6. How is the Immutable Status History maintained?
+Whenever a municipal administrator updates an issue's lifecycle status in `PATCH /api/admin/issues/:id/status`, Prisma executes an atomic transaction that updates the `Issue` model and persists a new `StatusHistory` record capturing `previousStatus`, `newStatus`, `changedById`, and administrative `remarks`. In addition, Node's built-in `EventEmitter` emits an asynchronous `statusChanged` event that appends the change to `logs/status.log`, ensuring complete auditability for municipal oversight.
