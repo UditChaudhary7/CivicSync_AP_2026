@@ -21,6 +21,7 @@ model User {
   issues        Issue[]
   upvotes       Upvote[]
   statusHistory StatusHistory[]
+  comments      Comment[]
 }
 
 model Issue {
@@ -45,6 +46,7 @@ model Issue {
   // 1-to-many relations
   upvotes        Upvote[]
   statusHistory  StatusHistory[]
+  comments       Comment[]
 }
 
 model Upvote {
@@ -71,4 +73,16 @@ model StatusHistory {
   changedBy      User     @relation(fields: [changedById], references: [id], onDelete: Cascade)
   remarks        String?
   createdAt      DateTime @default(now())
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  // Foreign keys
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueId   Int
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
 }

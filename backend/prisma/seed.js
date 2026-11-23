@@ -149,6 +149,7 @@ async function main() {
   }
 
   // Clean existing Prisma data for idempotency
+  if (prisma.comment) await prisma.comment.deleteMany();
   if (prisma.statusHistory) await prisma.statusHistory.deleteMany();
   await prisma.upvote.deleteMany();
   await prisma.issue.deleteMany();
@@ -287,6 +288,42 @@ async function main() {
       `);
     } catch (e) {
       // Ignore if table not present
+    }
+  }
+
+  // Seed sample citizen and admin comments
+  if (prisma.comment) {
+    const firstIssue = await prisma.issue.findFirst({ where: { trackingNumber: 'REP-2026-00101' } });
+    const secondIssue = await prisma.issue.findFirst({ where: { trackingNumber: 'REP-2026-00102' } });
+
+    if (firstIssue) {
+      await prisma.comment.createMany({
+        data: [
+          {
+            issueId: firstIssue.id,
+            userId: citizen.id,
+            content: 'The potholes have gotten much deeper after yesterday\'s rainfall. Please dispatch an inspection team soon.',
+            createdAt: new Date(Date.now() - 18 * 3600 * 1000)
+          },
+          {
+            issueId: firstIssue.id,
+            userId: admin.id,
+            content: 'Inspection officer assigned from Ward 2 Road Works division. Work order dispatched.',
+            createdAt: new Date(Date.now() - 6 * 3600 * 1000)
+          }
+        ]
+      });
+    }
+
+    if (secondIssue) {
+      await prisma.comment.create({
+        data: {
+          issueId: secondIssue.id,
+          userId: citizen.id,
+          content: 'Electrician team spotted replacing the luminaires this morning.',
+          createdAt: new Date(Date.now() - 4 * 3600 * 1000)
+        }
+      });
     }
   }
 
