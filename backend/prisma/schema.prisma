@@ -18,31 +18,33 @@ model User {
   createdAt DateTime @default(now())
 
   // 1-to-many relations
-  issues    Issue[]
-  upvotes   Upvote[]
+  issues        Issue[]
+  upvotes       Upvote[]
+  statusHistory StatusHistory[]
 }
 
 model Issue {
-  id             Int      @id @default(autoincrement())
-  trackingNumber String   @unique
+  id             Int             @id @default(autoincrement())
+  trackingNumber String          @unique
   title          String
   description    String
   category       String
-  severity       String   // "LOW", "MEDIUM", "HIGH", "CRITICAL"
-  status         String   @default("REPORTED") // "REPORTED", "IN_PROGRESS", "RESOLVED"
+  severity       String          // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  status         String          @default("REPORTED") // "REPORTED", "IN_PROGRESS", "RESOLVED"
   latitude       Float
   longitude      Float
   address        String
   photoUrl       String?
-  priority       Int      @default(0)
-  createdAt      DateTime @default(now())
+  priority       Int             @default(0)
+  createdAt      DateTime        @default(now())
 
   // Foreign key relation to User
   userId         Int
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // 1-to-many relation to Upvotes
+  // 1-to-many relations
   upvotes        Upvote[]
+  statusHistory  StatusHistory[]
 }
 
 model Upvote {
@@ -57,4 +59,16 @@ model Upvote {
 
   // Constraint: One upvote per user per issue
   @@unique([userId, issueId])
+}
+
+model StatusHistory {
+  id             Int      @id @default(autoincrement())
+  issueId        Int
+  issue          Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  previousStatus String?
+  newStatus      String
+  changedById    Int
+  changedBy      User     @relation(fields: [changedById], references: [id], onDelete: Cascade)
+  remarks        String?
+  createdAt      DateTime @default(now())
 }

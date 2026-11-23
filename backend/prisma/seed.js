@@ -149,6 +149,7 @@ async function main() {
   }
 
   // Clean existing Prisma data for idempotency
+  if (prisma.statusHistory) await prisma.statusHistory.deleteMany();
   await prisma.upvote.deleteMany();
   await prisma.issue.deleteMany();
   await prisma.user.deleteMany();
@@ -250,6 +251,20 @@ async function main() {
         userId: citizen.id
       }
     });
+
+    // Seed initial StatusHistory record in Prisma
+    if (prisma.statusHistory) {
+      await prisma.statusHistory.create({
+        data: {
+          issueId: issue.id,
+          previousStatus: null,
+          newStatus: item.status,
+          changedById: admin.id,
+          remarks: 'Complaint registered and verified by Sonipat Municipal Corporation',
+          createdAt: createdAt
+        }
+      });
+    }
 
     // Also link into normalized 'complaints' table
     try {
