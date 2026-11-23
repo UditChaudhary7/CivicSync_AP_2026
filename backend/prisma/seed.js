@@ -14,8 +14,123 @@ function calculatePriority(severity, upvotes, createdAt) {
   return Math.min(100, base + votePoints + timePoints);
 }
 
+async function ensureRelationalSchema() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS departments (
+      department_id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      contact_email TEXT NOT NULL,
+      contact_phone TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS wards (
+      ward_id INTEGER PRIMARY KEY,
+      ward_number TEXT NOT NULL UNIQUE,
+      ward_name TEXT NOT NULL,
+      zone_name TEXT NOT NULL
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS categories (
+      category_id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL,
+      department_id INTEGER NOT NULL,
+      default_priority TEXT DEFAULT 'MEDIUM',
+      sla_hours INTEGER DEFAULT 72,
+      FOREIGN KEY (department_id) REFERENCES departments (department_id)
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS complaints (
+      complaint_id TEXT PRIMARY KEY,
+      citizen_id INTEGER NOT NULL,
+      category_id INTEGER NOT NULL,
+      ward_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      landmark TEXT,
+      status TEXT DEFAULT 'REPORTED',
+      priority TEXT DEFAULT 'MEDIUM',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS complaint_status_history (
+      history_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      complaint_id TEXT NOT NULL,
+      previous_status TEXT,
+      new_status TEXT NOT NULL,
+      changed_by_user_id INTEGER NOT NULL,
+      remarks TEXT,
+      changed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS complaint_comments (
+      comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      complaint_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL,
+      comment_text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS complaint_images (
+      image_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      complaint_id TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      caption TEXT,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS complaint_assignments (
+      assignment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      complaint_id TEXT NOT NULL,
+      department_id INTEGER NOT NULL,
+      assigned_to_officer_id INTEGER,
+      assigned_by_user_id INTEGER NOT NULL,
+      assignment_status TEXT DEFAULT 'ACTIVE',
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS duplicate_complaints (
+      duplicate_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      canonical_complaint_id TEXT NOT NULL,
+      duplicate_complaint_id TEXT NOT NULL UNIQUE,
+      detected_by_user_id INTEGER,
+      flagged_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      complaint_id TEXT,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
 async function main() {
   console.log('Seeding database with Prisma ORM...');
+
+  // Ensure normalized relational tables exist in SQLite
+  try {
+    await ensureRelationalSchema();
+  } catch (err) {
+    console.warn('Note on schema initialization:', err.message);
+  }
 
   // Clean DBMS relational child tables first to respect foreign keys
   try {
