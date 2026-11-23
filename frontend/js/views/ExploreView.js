@@ -16,8 +16,26 @@ window.ExploreView = {
 
         <!-- Filter Bar -->
         <div class="card" style="margin-bottom: var(--space-4); padding: 12px;">
-          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <select id="filter-category" class="form-select" style="width:180px; height:34px; padding:4px 8px; font-size:12px;">
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+            <input type="text" id="filter-search" class="form-input" placeholder="🔍 Search title, description, landmark, or tracking #..." style="flex:1; min-width:220px; height:34px; font-size:12px;" />
+            <select id="filter-ward" class="form-select" style="width:170px; height:34px; padding:4px 8px; font-size:12px;">
+              <option value="all">All Wards (Sonipat)</option>
+              <option value="ward_1">Ward 1 (Sec 14 & Model Town)</option>
+              <option value="ward_2">Ward 2 (Subhash & Old DC)</option>
+              <option value="ward_3">Ward 3 (Railway & Atlas)</option>
+              <option value="ward_4">Ward 4 (Murthal & Sec 15)</option>
+              <option value="ward_5">Ward 5 (Sec 23 & Rathdhana)</option>
+            </select>
+            <select id="filter-sort" class="form-select" style="width:150px; height:34px; padding:4px 8px; font-size:12px;">
+              <option value="priority">Highest Priority</option>
+              <option value="most_upvoted">Most Upvoted</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <select id="filter-category" class="form-select" style="width:170px; height:34px; padding:4px 8px; font-size:12px;">
               <option value="all">All Categories</option>
               <option value="road_pothole">Roads & Potholes</option>
               <option value="streetlight">Street Lighting</option>
@@ -27,14 +45,14 @@ window.ExploreView = {
               <option value="public_infrastructure">Public Infrastructure</option>
             </select>
 
-            <select id="filter-status" class="form-select" style="width:150px; height:34px; padding:4px 8px; font-size:12px;">
+            <select id="filter-status" class="form-select" style="width:140px; height:34px; padding:4px 8px; font-size:12px;">
               <option value="all">All Statuses</option>
               <option value="reported">Reported</option>
               <option value="in_progress">In Progress</option>
               <option value="resolved">Resolved</option>
             </select>
 
-            <select id="filter-severity" class="form-select" style="width:150px; height:34px; padding:4px 8px; font-size:12px;">
+            <select id="filter-severity" class="form-select" style="width:140px; height:34px; padding:4px 8px; font-size:12px;">
               <option value="all">All Severities</option>
               <option value="critical">Critical</option>
               <option value="high">High</option>
@@ -42,7 +60,8 @@ window.ExploreView = {
               <option value="low">Low</option>
             </select>
 
-            <button id="btn-apply-filter" class="btn btn-secondary btn-sm" style="height:34px;">Filter</button>
+            <button id="btn-apply-filter" class="btn btn-primary btn-sm" style="height:34px;">Apply Filters</button>
+            <button id="btn-reset-filter" class="btn btn-secondary btn-sm" style="height:34px;">Reset</button>
           </div>
         </div>
 
@@ -65,7 +84,28 @@ window.ExploreView = {
     this.currentPage = 1;
     await this.loadIssues();
 
-    document.getElementById('btn-apply-filter')?.addEventListener('click', () => {
+    const triggerFilter = () => {
+      this.currentPage = 1;
+      this.loadIssues();
+    };
+
+    document.getElementById('btn-apply-filter')?.addEventListener('click', triggerFilter);
+    document.getElementById('filter-search')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') triggerFilter();
+    });
+    document.getElementById('filter-ward')?.addEventListener('change', triggerFilter);
+    document.getElementById('filter-sort')?.addEventListener('change', triggerFilter);
+    document.getElementById('filter-category')?.addEventListener('change', triggerFilter);
+    document.getElementById('filter-status')?.addEventListener('change', triggerFilter);
+    document.getElementById('filter-severity')?.addEventListener('change', triggerFilter);
+
+    document.getElementById('btn-reset-filter')?.addEventListener('click', () => {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-ward').value = 'all';
+      document.getElementById('filter-sort').value = 'priority';
+      document.getElementById('filter-category').value = 'all';
+      document.getElementById('filter-status').value = 'all';
+      document.getElementById('filter-severity').value = 'all';
       this.currentPage = 1;
       this.loadIssues();
     });
@@ -84,6 +124,9 @@ window.ExploreView = {
   },
 
   async loadIssues() {
+    const search = document.getElementById('filter-search')?.value || '';
+    const ward = document.getElementById('filter-ward')?.value || 'all';
+    const sortBy = document.getElementById('filter-sort')?.value || 'priority';
     const category = document.getElementById('filter-category')?.value || 'all';
     const status = document.getElementById('filter-status')?.value || 'all';
     const severity = document.getElementById('filter-severity')?.value || 'all';
@@ -91,6 +134,9 @@ window.ExploreView = {
     const res = await window.api.get('/issues', {
       page: this.currentPage,
       limit: 20,
+      search,
+      ward,
+      sortBy,
       category,
       status,
       severity

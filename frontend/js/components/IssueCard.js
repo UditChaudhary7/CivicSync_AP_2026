@@ -17,9 +17,10 @@ window.IssueCard = {
       <div class="card issue-card" id="card-issue-${issue.id}">
         ${photoHtml}
         <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:4px;">
             <span style="font-size:11px; font-weight:700; color:var(--color-text-tertiary);">${window.api.escapeHtml(issue.tracking_number)}</span>
-            <div style="display:flex; gap:4px;">
+            <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+              ${window.StatusBadge.renderSLA ? window.StatusBadge.renderSLA(issue) : ''}
               ${severityBadge}
               ${statusBadge}
             </div>

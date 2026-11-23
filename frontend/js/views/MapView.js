@@ -12,7 +12,15 @@ window.MapView = {
             <p style="font-size:var(--text-xs); color:var(--color-text-secondary); margin-bottom:0;">Live spatial distribution of municipal issues across Sonipat.</p>
           </div>
 
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="map-ward-select" class="form-select" style="width:160px; height:34px; font-size:12px;">
+              <option value="all">All Wards</option>
+              <option value="ward_1">Ward 1 (Model Town)</option>
+              <option value="ward_2">Ward 2 (Subhash Chowk)</option>
+              <option value="ward_3">Ward 3 (Railway Station)</option>
+              <option value="ward_4">Ward 4 (Murthal Road)</option>
+              <option value="ward_5">Ward 5 (Sector 23)</option>
+            </select>
             <select id="map-category-select" class="form-select" style="width:160px; height:34px; font-size:12px;">
               <option value="all">All Categories</option>
               <option value="road_pothole">Roads & Potholes</option>
@@ -47,12 +55,14 @@ window.MapView = {
     await this.refreshMap();
 
     document.getElementById('map-category-select')?.addEventListener('change', () => this.refreshMap());
+    document.getElementById('map-ward-select')?.addEventListener('change', () => this.refreshMap());
   },
 
   async refreshMap() {
     const category = document.getElementById('map-category-select')?.value || 'all';
+    const ward = document.getElementById('map-ward-select')?.value || 'all';
     try {
-      const res = await window.api.get('/issues', { limit: 50, category });
+      const res = await window.api.get('/issues', { limit: 100, category, ward });
       if (res.success) {
         this.mapInstance.renderIssues(res.data.issues || []);
       }
