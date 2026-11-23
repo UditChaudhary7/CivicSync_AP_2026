@@ -42,7 +42,7 @@ async function listAll(req, res, next) {
 // Update lifecycle status (REPORTED -> IN_PROGRESS -> RESOLVED) and emit statusChanged event
 async function changeStatus(req, res, next) {
   try {
-    const { status } = req.body;
+    const { status, remarks } = req.body;
     const allowed = ['REPORTED', 'IN_PROGRESS', 'RESOLVED'];
     const formattedStatus = (status || '').toUpperCase();
 
@@ -50,24 +50,23 @@ async function changeStatus(req, res, next) {
       return res.status(400).json({ success: false, message: 'Invalid status. Must be REPORTED, IN_PROGRESS, or RESOLVED.' });
     }
 
-    const previous = await issueService.getIssueDetails(req.params.id);
-    if (!previous) return res.status(404).json({ success: false, message: 'Issue not found' });
-
-    const updated = await issueService.updateStatus(req.params.id, formattedStatus);
+    const result = await issueService.updateStatus(req.params.id, formattedStatus, req.user.userId, remarks);
+    if (!result) return res.status(404).json({ success: false, message: 'Issue not found' });
 
     // Emit event for asynchronous audit logging using Node.js events module
     statusEmitter.emit('statusChanged', {
-      issueId: updated.id,
-      trackingNumber: updated.trackingNumber,
-      oldStatus: previous.status,
-      newStatus: updated.status,
-      adminEmail: req.user.email
+      issueId: result.updated.id,
+      trackingNumber: result.updated.trackingNumber,
+      oldStatus: result.previous.status,
+      newStatus: result.updated.status,
+      adminEmail: req.user.email,
+      remarks: remarks || null
     });
 
     res.status(200).json({
       success: true,
-      message: `Status updated to ${updated.status}`,
-      data: { issue: formatIssue(updated) }
+      message: `Status updated to ${result.updated.status}`,
+      data: { issue: formatIssue(result.updated) }
     });
   } catch (err) {
     next(err);

@@ -11,7 +11,16 @@ function formatIssue(issue) {
     photo_url: issue.photoUrl,
     created_at: issue.createdAt,
     reporter_name: issue.user?.fullName || 'Citizen',
-    upvotes: issue._count?.upvotes !== undefined ? issue._count.upvotes : issue.upvotes
+    upvotes: issue._count?.upvotes !== undefined ? issue._count.upvotes : issue.upvotes,
+    status_history: issue.statusHistory ? issue.statusHistory.map(h => ({
+      id: h.id,
+      previous_status: h.previousStatus,
+      new_status: h.newStatus,
+      changed_by_name: h.changedBy?.fullName || 'Municipal Officer',
+      changed_by_role: h.changedBy?.role || 'ADMIN',
+      remarks: h.remarks,
+      created_at: h.createdAt
+    })) : []
   };
 }
 

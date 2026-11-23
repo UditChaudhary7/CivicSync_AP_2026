@@ -40,7 +40,7 @@ async function getIssuesList({ page = 1, limit = 20, category, status, severity,
   };
 }
 
-// Retrieve single issue details with user and upvote relations
+// Retrieve single issue details with user, upvote relations, and status history
 async function getIssueDetails(identifier) {
   const isNumeric = !isNaN(identifier);
   const where = isNumeric ? { id: parseInt(identifier) } : { trackingNumber: identifier };
@@ -49,7 +49,13 @@ async function getIssueDetails(identifier) {
     where,
     include: {
       user: { select: { fullName: true, email: true } },
-      _count: { select: { upvotes: true } }
+      _count: { select: { upvotes: true } },
+      statusHistory: {
+        include: {
+          changedBy: { select: { fullName: true, role: true } }
+        },
+        orderBy: { createdAt: 'asc' }
+      }
     }
   });
 }
@@ -133,12 +139,42 @@ async function toggleIssueUpvote(issueId, userId) {
   };
 }
 
-// Update issue status and return updated record
-async function updateStatus(issueId, newStatus) {
+// Update issue status and create immutable audit history log in a transaction
+async function updateStatus(issueId, newStatus, changedByUserId, remarks = null) {
   const parsedIssueId = parseInt(issueId);
-  return prisma.issue.update({
-    where: { id: parsedIssueId },
-    data: { status: newStatus.toUpperCase() }
+  const previous = await prisma.issue.findUnique({ where: { id: parsedIssueId } });
+  if (!previous) return null;
+
+  const upperStatus = newStatus.toUpperCase();
+
+  const [updated] = await prisma.$transaction([
+    prisma.issue.update({
+      where: { id: parsedIssueId },
+      data: { status: upperStatus }
+    }),
+    prisma.statusHistory.create({
+      data: {
+        issueId: parsedIssueId,
+        previousStatus: previous.status,
+        newStatus: upperStatus,
+        changedById: changedByUserId,
+        remarks: remarks && remarks.trim() ? remarks.trim() : null
+      }
+    })
+  ]);
+
+  return { updated, previous };
+}
+
+// Retrieve chronological status audit history for an issue
+async function getStatusHistory(issueId) {
+  const parsedIssueId = parseInt(issueId);
+  return prisma.statusHistory.findMany({
+    where: { issueId: parsedIssueId },
+    include: {
+      changedBy: { select: { fullName: true, role: true } }
+    },
+    orderBy: { createdAt: 'asc' }
   });
 }
 
@@ -161,5 +197,6 @@ module.exports = {
   createNewIssue,
   toggleIssueUpvote,
   updateStatus,
+  getStatusHistory,
   getDashboardMetrics
 };

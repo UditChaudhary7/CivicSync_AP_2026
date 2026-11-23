@@ -14,7 +14,8 @@ if (!fs.existsSync(logsDir)) {
 
 // Event listener that asynchronously appends status updates to a file
 statusEmitter.on('statusChanged', (data) => {
-  const line = `[${new Date().toISOString()}] Issue #${data.trackingNumber} status changed from ${data.oldStatus} to ${data.newStatus} by ${data.adminEmail || 'ADMIN'}\n`;
+  const remarksText = data.remarks ? ` [Remarks: ${data.remarks}]` : '';
+  const line = `[${new Date().toISOString()}] Issue #${data.trackingNumber} status changed from ${data.oldStatus} to ${data.newStatus} by ${data.adminEmail || 'ADMIN'}${remarksText}\n`;
   fs.appendFile(logFile, line, (err) => {
     if (err) console.error('Error writing to status.log:', err);
   });
