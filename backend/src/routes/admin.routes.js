@@ -11,6 +11,7 @@ router.use(requireAuth, requireRole('ADMIN'));
 
 router.get('/stats', adminController.getStats);
 router.get('/issues', adminController.listAll);
+router.get('/export/csv', adminController.exportCsv);
 router.patch('/issues/:id/status', adminController.changeStatus);
 
 module.exports = router;

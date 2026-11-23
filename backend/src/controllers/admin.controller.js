@@ -75,4 +75,63 @@ async function changeStatus(req, res, next) {
   }
 }
 
-module.exports = { getStats, listAll, changeStatus };
+// Export all complaints as an RFC 4180 compliant CSV stream for municipal administration
+async function exportCsv(req, res, next) {
+  try {
+    const result = await issueService.getIssuesList({ limit: 1000, sortBy: 'newest' });
+    const issues = result.issues || [];
+
+    const headers = [
+      'Tracking Number',
+      'Title',
+      'Category',
+      'Severity',
+      'Status',
+      'Priority Score',
+      'Address',
+      'Latitude',
+      'Longitude',
+      'Reporter',
+      'Upvotes',
+      'SLA Status',
+      'Created Date'
+    ];
+
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '""';
+      const val = String(str).replace(/"/g, '""');
+      return `"${val}"`;
+    };
+
+    const rows = issues.map(issue => {
+      const formatted = formatIssue(issue);
+      const sla = formatted.sla || slaService.calculateSlaMetrics(issue);
+      return [
+        escapeCsv(formatted.tracking_number),
+        escapeCsv(formatted.title),
+        escapeCsv(formatted.category),
+        escapeCsv(formatted.severity),
+        escapeCsv(formatted.status),
+        escapeCsv(formatted.priority),
+        escapeCsv(formatted.address),
+        escapeCsv(formatted.latitude),
+        escapeCsv(formatted.longitude),
+        escapeCsv(formatted.user?.fullName || 'Citizen'),
+        escapeCsv(formatted.upvotes || 0),
+        escapeCsv(sla?.sla_status || 'ON_TRACK'),
+        escapeCsv(new Date(formatted.created_at).toISOString().split('T')[0])
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="civicsync-complaints-${dateStr}.csv"`);
+    res.status(200).send(csvContent);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getStats, listAll, changeStatus, exportCsv };
