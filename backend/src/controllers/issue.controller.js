@@ -20,6 +20,13 @@ function formatIssue(issue) {
       changed_by_role: h.changedBy?.role || 'ADMIN',
       remarks: h.remarks,
       created_at: h.createdAt
+    })) : [],
+    comments: issue.comments ? issue.comments.map(c => ({
+      id: c.id,
+      content: c.content,
+      created_at: c.createdAt,
+      author_name: c.user?.fullName || 'Citizen',
+      author_role: c.user?.role || 'CITIZEN'
     })) : []
   };
 }
@@ -108,4 +115,60 @@ async function checkDuplicate(req, res, next) {
   }
 }
 
-module.exports = { list, detail, myReports, create, upvote, checkDuplicate };
+// Retrieve comments for an issue
+async function getComments(req, res, next) {
+  try {
+    const comments = await issueService.getIssueComments(req.params.id);
+    res.status(200).json({
+      success: true,
+      data: {
+        comments: comments.map(c => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.createdAt,
+          author_name: c.user?.fullName || 'Citizen',
+          author_role: c.user?.role || 'CITIZEN'
+        }))
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Add a new comment to an issue
+async function addComment(req, res, next) {
+  try {
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: 'Comment content cannot be empty.' });
+    }
+    if (content.trim().length > 500) {
+      return res.status(400).json({ success: false, message: 'Comment cannot exceed 500 characters.' });
+    }
+
+    const comment = await issueService.addCommentToIssue({
+      issueId: req.params.id,
+      userId: req.user.userId,
+      content: content.trim()
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Comment posted successfully',
+      data: {
+        comment: {
+          id: comment.id,
+          content: comment.content,
+          created_at: comment.createdAt,
+          author_name: comment.user?.fullName || 'Citizen',
+          author_role: comment.user?.role || 'CITIZEN'
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, detail, myReports, create, upvote, checkDuplicate, getComments, addComment };

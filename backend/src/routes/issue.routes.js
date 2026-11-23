@@ -13,5 +13,7 @@ router.post('/check-duplicate', issueController.checkDuplicate);
 router.post('/', requireAuth, upload.single('photo'), issueController.create);
 router.post('/:id/upvote', requireAuth, issueController.upvote);
 router.get('/:id', issueController.detail);
+router.get('/:id/comments', issueController.getComments);
+router.post('/:id/comments', requireAuth, issueController.addComment);
 
 module.exports = router;

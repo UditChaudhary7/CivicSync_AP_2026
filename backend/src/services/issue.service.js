@@ -55,6 +55,12 @@ async function getIssueDetails(identifier) {
           changedBy: { select: { fullName: true, role: true } }
         },
         orderBy: { createdAt: 'asc' }
+      },
+      comments: {
+        include: {
+          user: { select: { fullName: true, role: true } }
+        },
+        orderBy: { createdAt: 'asc' }
       }
     }
   });
@@ -178,6 +184,36 @@ async function getStatusHistory(issueId) {
   });
 }
 
+// Retrieve comments for a specific issue
+async function getIssueComments(issueId) {
+  const parsedIssueId = parseInt(issueId);
+  return prisma.comment.findMany({
+    where: { issueId: parsedIssueId },
+    include: {
+      user: { select: { fullName: true, role: true } }
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+}
+
+// Add a new comment to an issue
+async function addCommentToIssue({ issueId, userId, content }) {
+  const parsedIssueId = parseInt(issueId);
+  const trimmed = (content || '').trim();
+  if (!trimmed) throw new Error('Comment content cannot be empty.');
+
+  return prisma.comment.create({
+    data: {
+      issueId: parsedIssueId,
+      userId,
+      content: trimmed
+    },
+    include: {
+      user: { select: { fullName: true, role: true } }
+    }
+  });
+}
+
 // Aggregate counts for the municipal administrator dashboard
 async function getDashboardMetrics() {
   const [total, reported, inProgress, resolved] = await Promise.all([
@@ -198,5 +234,7 @@ module.exports = {
   toggleIssueUpvote,
   updateStatus,
   getStatusHistory,
+  getIssueComments,
+  addCommentToIssue,
   getDashboardMetrics
 };
