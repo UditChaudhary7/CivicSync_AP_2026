@@ -97,6 +97,46 @@ window.IssueDetailView = {
       </div>
     `;
 
+    const commentsList = issue.comments || [];
+    const isUserLoggedIn = !!window.api.getUser();
+    const commentsHtml = `
+      <div style="margin-top:24px; border-top:1px solid var(--color-border-subtle); padding-top:16px;">
+        <h4 style="font-size:13px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary); margin-bottom:12px;">
+          Community Discussion (<span id="comment-counter">${commentsList.length}</span>)
+        </h4>
+
+        <!-- Comments List -->
+        <div id="comments-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+          ${commentsList.length === 0 ? '<div id="no-comments-msg" style="font-size:12px; color:var(--color-text-tertiary);">No comments yet. Be the first to share an update.</div>' : commentsList.map(c => `
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:12px; font-weight:700; color:#0F172A;">${window.api.escapeHtml(c.author_name)}</span>
+                  <span style="font-size:10px; font-weight:600; padding:1px 6px; border-radius:3px; background:${c.author_role === 'ADMIN' ? '#E0E7FF; color:#3730A3' : '#F1F5F9; color:#475569'};">${c.author_role}</span>
+                </div>
+                <span style="font-size:11px; color:#64748B;">${new Date(c.created_at).toLocaleDateString()}</span>
+              </div>
+              <p style="font-size:13px; color:#334155; margin:0; line-height:1.5;">${window.api.escapeHtml(c.content)}</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Add Comment Form -->
+        ${isUserLoggedIn ? `
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <textarea id="comment-input" class="form-textarea" rows="2" placeholder="Write an update or remark about this issue..." style="font-size:13px; resize:vertical;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button id="btn-submit-comment" class="btn btn-primary btn-sm">Post Update</button>
+            </div>
+          </div>
+        ` : `
+          <div style="font-size:12px; color:var(--color-text-secondary); background:#F1F5F9; padding:10px 14px; border-radius:6px; text-align:center;">
+            Please <a href="#/login" style="font-weight:600; color:var(--color-accent-primary);">Sign In</a> to post a comment or update.
+          </div>
+        `}
+      </div>
+    `;
+
     const html = `
       <div style="margin-bottom:12px;">
         <a href="#/explore" style="font-size:12px; color:var(--color-text-secondary); text-decoration:none;">← Back to Issues</a>
@@ -133,6 +173,7 @@ window.IssueDetailView = {
 
           ${adminControlsHtml}
           ${timelineHtml}
+          ${commentsHtml}
         </div>
 
         <!-- Right: Map & Location Metadata -->
@@ -202,6 +243,45 @@ window.IssueDetailView = {
         }
       } catch (err) {
         alert('Update error: ' + err.message);
+      }
+    });
+
+    // Submit comment handler
+    document.getElementById('btn-submit-comment')?.addEventListener('click', async () => {
+      const input = document.getElementById('comment-input');
+      const content = (input?.value || '').trim();
+      if (!content) return alert('Please enter a comment.');
+
+      try {
+        const res = await window.api.post(`/issues/${issue.id}/comments`, { content });
+        if (res.success && res.data.comment) {
+          input.value = '';
+          const noMsg = document.getElementById('no-comments-msg');
+          if (noMsg) noMsg.remove();
+
+          const c = res.data.comment;
+          const container = document.getElementById('comments-container');
+          const commentEl = document.createElement('div');
+          commentEl.style.cssText = 'background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:12px;';
+          commentEl.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:12px; font-weight:700; color:#0F172A;">${window.api.escapeHtml(c.author_name)}</span>
+                <span style="font-size:10px; font-weight:600; padding:1px 6px; border-radius:3px; background:${c.author_role === 'ADMIN' ? '#E0E7FF; color:#3730A3' : '#F1F5F9; color:#475569'};">${c.author_role}</span>
+              </div>
+              <span style="font-size:11px; color:#64748B;">Just now</span>
+            </div>
+            <p style="font-size:13px; color:#334155; margin:0; line-height:1.5;">${window.api.escapeHtml(c.content)}</p>
+          `;
+          container.appendChild(commentEl);
+
+          const counter = document.getElementById('comment-counter');
+          if (counter) counter.textContent = parseInt(counter.textContent || '0') + 1;
+        } else {
+          alert(res.message || 'Failed to post comment');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
       }
     });
   }
