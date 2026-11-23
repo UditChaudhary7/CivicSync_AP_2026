@@ -1,6 +1,7 @@
 // src/controllers/admin.controller.js - Express Controller for Administrator Operations
 const issueService = require('../services/issue.service');
 const statusEmitter = require('../events/statusEvents');
+const slaService = require('../services/sla.service');
 
 // Helper to format issue object for frontend
 function formatIssue(issue) {
@@ -9,7 +10,8 @@ function formatIssue(issue) {
     tracking_number: issue.trackingNumber,
     photo_url: issue.photoUrl,
     created_at: issue.createdAt,
-    upvotes: issue._count?.upvotes !== undefined ? issue._count.upvotes : issue.upvotes
+    upvotes: issue._count?.upvotes !== undefined ? issue._count.upvotes : issue.upvotes,
+    sla: slaService.calculateSlaMetrics(issue)
   };
 }
 

@@ -1,6 +1,7 @@
 // src/services/issue.service.js - Issue CRUD, Prisma Relations, Pagination & Upvoting
 const prisma = require('../prisma');
 const { calculatePriorityScore } = require('./priority.service');
+const slaService = require('./sla.service');
 
 // Retrieve paginated issues with Prisma relation filtering and sorting
 async function getIssuesList({ page = 1, limit = 20, category, status, severity, sortBy = 'priority' }) {
@@ -216,14 +217,33 @@ async function addCommentToIssue({ issueId, userId, content }) {
 
 // Aggregate counts for the municipal administrator dashboard
 async function getDashboardMetrics() {
-  const [total, reported, inProgress, resolved] = await Promise.all([
+  const [total, reported, inProgress, resolved, activeIssues] = await Promise.all([
     prisma.issue.count(),
     prisma.issue.count({ where: { status: 'REPORTED' } }),
     prisma.issue.count({ where: { status: 'IN_PROGRESS' } }),
-    prisma.issue.count({ where: { status: 'RESOLVED' } })
+    prisma.issue.count({ where: { status: 'RESOLVED' } }),
+    prisma.issue.findMany({
+      where: { status: { not: 'RESOLVED' } },
+      select: { category: true, createdAt: true, status: true }
+    })
   ]);
 
-  return { total, reported, in_progress: inProgress, resolved };
+  const slaBreachedCount = activeIssues.filter(iss => {
+    const slaHours = slaService.getCategorySlaHours(iss.category);
+    const deadline = new Date(iss.createdAt).getTime() + (slaHours * 3600 * 1000);
+    return Date.now() > deadline;
+  }).length;
+
+  const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
+
+  return {
+    total,
+    reported,
+    in_progress: inProgress,
+    resolved,
+    sla_breached: slaBreachedCount,
+    resolution_rate: resolutionRate
+  };
 }
 
 module.exports = {

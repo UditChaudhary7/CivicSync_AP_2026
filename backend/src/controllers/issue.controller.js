@@ -1,6 +1,7 @@
 // src/controllers/issue.controller.js - Express Controller for Civic Issues & Upvotes
 const issueService = require('../services/issue.service');
 const duplicateService = require('../services/duplicate.service');
+const slaService = require('../services/sla.service');
 
 // Format issue object for frontend consistency (supporting camelCase and legacy snake_case)
 function formatIssue(issue) {
@@ -12,6 +13,7 @@ function formatIssue(issue) {
     created_at: issue.createdAt,
     reporter_name: issue.user?.fullName || 'Citizen',
     upvotes: issue._count?.upvotes !== undefined ? issue._count.upvotes : issue.upvotes,
+    sla: slaService.calculateSlaMetrics(issue),
     status_history: issue.statusHistory ? issue.statusHistory.map(h => ({
       id: h.id,
       previous_status: h.previousStatus,
