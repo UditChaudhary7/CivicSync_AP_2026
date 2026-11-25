@@ -1,0 +1,55 @@
+Query ID: 5.1
+Query Name: Retrieve Latest Active Assignment for Complaint
+Category: Workflow Allocation
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT ca.assignment_id, ca.complaint_id, ca.department_id, d.name AS department_name, ca.assigned_to_officer_id, officer.name AS officer_name, officer.email AS officer_email, officer.phone AS officer_phone, ca.assigned_by_user_id, assigner.name AS assigned_by_name, ca.notes AS assignment_notes, ca.assigned_at FROM complaint_assignments ca INNER JOIN departments d ON ca.department_id = d.department_id LEFT JOIN users officer ON ca.assigned_to_officer_id = officer.user_id INNER JOIN users assigner ON ca.assigned_by_user_id = assigner.user_id WHERE ca.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0' ORDER BY ca.assigned_at DESC LIMIT 1;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                        QUERY PLAN                                                                                                         
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=145.37..145.37 rows=1 width=246) (actual time=0.139..0.139 rows=0.00 loops=1)
+   Output: ca.assignment_id, ca.complaint_id, ca.department_id, d.name, ca.assigned_to_officer_id, officer.name, officer.email, officer.phone, ca.assigned_by_user_id, assigner.name, ca.notes, ca.assigned_at
+   Buffers: shared hit=91
+   ->  Sort  (cost=145.37..145.37 rows=1 width=246) (actual time=0.139..0.139 rows=0.00 loops=1)
+         Output: ca.assignment_id, ca.complaint_id, ca.department_id, d.name, ca.assigned_to_officer_id, officer.name, officer.email, officer.phone, ca.assigned_by_user_id, assigner.name, ca.notes, ca.assigned_at
+         Sort Key: ca.assigned_at DESC
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=91
+         ->  Nested Loop  (cost=0.55..145.36 rows=1 width=246) (actual time=0.134..0.134 rows=0.00 loops=1)
+               Output: ca.assignment_id, ca.complaint_id, ca.department_id, d.name, ca.assigned_to_officer_id, officer.name, officer.email, officer.phone, ca.assigned_by_user_id, assigner.name, ca.notes, ca.assigned_at
+               Inner Unique: true
+               Buffers: shared hit=88
+               ->  Nested Loop Left Join  (cost=0.28..142.86 rows=1 width=228) (actual time=0.134..0.134 rows=0.00 loops=1)
+                     Output: ca.assignment_id, ca.complaint_id, ca.department_id, ca.assigned_to_officer_id, ca.assigned_by_user_id, ca.notes, ca.assigned_at, d.name, officer.name, officer.email, officer.phone
+                     Inner Unique: true
+                     Buffers: shared hit=88
+                     ->  Nested Loop  (cost=0.00..140.36 rows=1 width=172) (actual time=0.134..0.134 rows=0.00 loops=1)
+                           Output: ca.assignment_id, ca.complaint_id, ca.department_id, ca.assigned_to_officer_id, ca.assigned_by_user_id, ca.notes, ca.assigned_at, d.name
+                           Inner Unique: true
+                           Join Filter: (d.department_id = ca.department_id)
+                           Buffers: shared hit=88
+                           ->  Seq Scan on public.complaint_assignments ca  (cost=0.00..139.25 rows=1 width=142) (actual time=0.134..0.134 rows=0.00 loops=1)
+                                 Output: ca.assignment_id, ca.complaint_id, ca.department_id, ca.assigned_to_officer_id, ca.assigned_by_user_id, ca.notes, ca.assigned_at
+                                 Filter: (ca.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0'::uuid)
+                                 Rows Removed by Filter: 4100
+                                 Buffers: shared hit=88
+                           ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (never executed)
+                                 Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+                     ->  Index Scan using pk_users on public.users officer  (cost=0.28..2.49 rows=1 width=72) (never executed)
+                           Output: officer.user_id, officer.name, officer.email, officer.phone, officer.password_hash, officer.role, officer.department_id, officer.created_at, officer.updated_at
+                           Index Cond: (officer.user_id = ca.assigned_to_officer_id)
+                           Index Searches: 0
+               ->  Index Scan using pk_users on public.users assigner  (cost=0.28..2.49 rows=1 width=34) (never executed)
+                     Output: assigner.user_id, assigner.name, assigner.email, assigner.phone, assigner.password_hash, assigner.role, assigner.department_id, assigner.created_at, assigner.updated_at
+                     Index Cond: (assigner.user_id = ca.assigned_by_user_id)
+                     Index Searches: 0
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=417
+ Planning Time: 0.463 ms
+ Execution Time: 0.162 ms
+(41 rows)
+

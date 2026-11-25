@@ -1,0 +1,44 @@
+Query ID: 2.1
+Query Name: Retrieve All Departments with Category Counts
+Category: Administrative Lookups
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT d.department_id, d.name AS department_name, d.contact_email, d.contact_phone, d.created_at, COUNT(c.category_id) AS total_categories_managed FROM departments d LEFT JOIN categories c ON d.department_id = c.department_id GROUP BY d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at ORDER BY d.name ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                QUERY PLAN                                                                
+------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2.40..2.41 rows=5 width=98) (actual time=0.025..0.025 rows=5.00 loops=1)
+   Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at, (count(c.category_id))
+   Sort Key: d.name
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=5
+   ->  HashAggregate  (cost=2.29..2.34 rows=5 width=98) (actual time=0.016..0.017 rows=5.00 loops=1)
+         Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at, count(c.category_id)
+         Group Key: d.name
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=2
+         ->  Hash Right Join  (cost=1.11..2.25 rows=9 width=94) (actual time=0.009..0.013 rows=9.00 loops=1)
+               Output: d.name, d.department_id, d.contact_email, d.contact_phone, d.created_at, c.category_id
+               Inner Unique: true
+               Hash Cond: (c.department_id = d.department_id)
+               Buffers: shared hit=2
+               ->  Seq Scan on public.categories c  (cost=0.00..1.09 rows=9 width=8) (actual time=0.001..0.001 rows=9.00 loops=1)
+                     Output: c.category_id, c.name, c.description, c.department_id, c.default_priority, c.sla_hours
+                     Buffers: shared hit=1
+               ->  Hash  (cost=1.05..1.05 rows=5 width=90) (actual time=0.005..0.005 rows=5.00 loops=1)
+                     Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     Buffers: shared hit=1
+                     ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=90) (actual time=0.002..0.003 rows=5.00 loops=1)
+                           Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+                           Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=159
+ Planning Time: 0.260 ms
+ Execution Time: 0.057 ms
+(30 rows)
+

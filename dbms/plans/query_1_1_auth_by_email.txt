@@ -1,0 +1,24 @@
+Query ID: 1.1
+Query Name: User Authentication by Email
+Category: Authentication
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at FROM users u WHERE u.email = LOWER(TRIM('citizen1@example.com'));
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                             QUERY PLAN                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using uq_users_email on public.users u  (cost=0.28..2.49 rows=1 width=150) (actual time=0.005..0.005 rows=1.00 loops=1)
+   Output: user_id, name, email, phone, password_hash, role, department_id, created_at, updated_at
+   Index Cond: ((u.email)::text = 'citizen1@example.com'::text)
+   Index Searches: 1
+   Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=105
+ Planning Time: 0.184 ms
+ Execution Time: 0.016 ms
+(10 rows)
+

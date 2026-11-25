@@ -1,0 +1,56 @@
+Query ID: 8.1
+Query Name: Retrieve Duplicates Linked to a Canonical Complaint
+Category: Duplicate Management
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT dc.duplicate_complaint_id, c.title AS duplicate_title, c.citizen_id AS reporting_citizen_id, u.name AS reporting_citizen_name, c.created_at AS reported_at, dc.confidence_score, dc.detected_by_user_id, detector.name AS detected_by_name, dc.created_at AS linked_at FROM duplicate_complaints dc INNER JOIN complaints c ON dc.duplicate_complaint_id = c.complaint_id INNER JOIN users u ON c.citizen_id = u.user_id LEFT JOIN users detector ON dc.detected_by_user_id = detector.user_id WHERE dc.canonical_complaint_id = 'f431b051-f3de-4aea-a2b3-1d4e422fc2af' ORDER BY dc.created_at DESC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                               QUERY PLAN                                                                                                
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=9.18..9.19 rows=1 width=151) (actual time=0.020..0.020 rows=1.00 loops=1)
+   Output: dc.duplicate_complaint_id, c.title, c.citizen_id, u.name, c.created_at, dc.confidence_score, dc.detected_by_user_id, detector.name, dc.created_at
+   Sort Key: dc.created_at DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=14
+   ->  Nested Loop Left Join  (cost=0.83..9.17 rows=1 width=151) (actual time=0.012..0.016 rows=1.00 loops=1)
+         Output: dc.duplicate_complaint_id, c.title, c.citizen_id, u.name, c.created_at, dc.confidence_score, dc.detected_by_user_id, detector.name, dc.created_at
+         Inner Unique: true
+         Buffers: shared hit=11
+         ->  Nested Loop  (cost=0.56..6.68 rows=1 width=133) (actual time=0.009..0.012 rows=1.00 loops=1)
+               Output: dc.duplicate_complaint_id, dc.confidence_score, dc.detected_by_user_id, dc.created_at, c.title, c.citizen_id, c.created_at, u.name
+               Inner Unique: true
+               Buffers: shared hit=8
+               ->  Nested Loop  (cost=0.28..6.38 rows=1 width=115) (actual time=0.005..0.009 rows=1.00 loops=1)
+                     Output: dc.duplicate_complaint_id, dc.confidence_score, dc.detected_by_user_id, dc.created_at, c.title, c.citizen_id, c.created_at
+                     Inner Unique: true
+                     Buffers: shared hit=5
+                     ->  Seq Scan on public.duplicate_complaints dc  (cost=0.00..3.88 rows=1 width=45) (actual time=0.002..0.006 rows=1.00 loops=1)
+                           Output: dc.duplicate_complaint_id, dc.canonical_complaint_id, dc.detected_by_user_id, dc.confidence_score, dc.created_at
+                           Filter: (dc.canonical_complaint_id = 'f431b051-f3de-4aea-a2b3-1d4e422fc2af'::uuid)
+                           Rows Removed by Filter: 149
+                           Buffers: shared hit=2
+                     ->  Index Scan using pk_complaints on public.complaints c  (cost=0.28..2.50 rows=1 width=86) (actual time=0.003..0.003 rows=1.00 loops=1)
+                           Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                           Index Cond: (c.complaint_id = dc.duplicate_complaint_id)
+                           Index Searches: 1
+                           Buffers: shared hit=3
+               ->  Index Scan using pk_users on public.users u  (cost=0.28..0.30 rows=1 width=34) (actual time=0.003..0.003 rows=1.00 loops=1)
+                     Output: u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at
+                     Index Cond: (u.user_id = c.citizen_id)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+         ->  Index Scan using pk_users on public.users detector  (cost=0.28..2.49 rows=1 width=34) (actual time=0.003..0.003 rows=1.00 loops=1)
+               Output: detector.user_id, detector.name, detector.email, detector.phone, detector.password_hash, detector.role, detector.department_id, detector.created_at, detector.updated_at
+               Index Cond: (detector.user_id = dc.detected_by_user_id)
+               Index Searches: 1
+               Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=323
+ Planning Time: 0.406 ms
+ Execution Time: 0.046 ms
+(42 rows)
+

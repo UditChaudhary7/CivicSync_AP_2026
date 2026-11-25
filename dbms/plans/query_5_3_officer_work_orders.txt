@@ -1,0 +1,68 @@
+Query ID: 5.3
+Query Name: Field Officer Assigned Work Orders Queue
+Category: Workflow Allocation
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, cat.name AS category_name, w.ward_number, w.ward_name, c.latitude, c.longitude, c.landmark, c.status, c.priority, ca.assigned_at, ca.notes AS officer_instructions, c.created_at + (cat.sla_hours * INTERVAL '1 hour') AS sla_deadline FROM complaint_assignments ca INNER JOIN complaints c ON ca.complaint_id = c.complaint_id INNER JOIN categories cat ON c.category_id = cat.category_id INNER JOIN wards w ON c.ward_id = w.ward_id WHERE ca.assigned_to_officer_id = '6615eab0-5925-4b68-8eae-9c742835e8cf' AND c.status IN ('ASSIGNED', 'IN_PROGRESS') ORDER BY CASE c.priority WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 WHEN 'LOW' THEN 4 ELSE 5 END ASC, c.created_at ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                                                                                         QUERY PLAN                                                                                                                                                                                                                         
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=287.39..287.48 rows=36 width=279) (actual time=0.283..0.284 rows=45.00 loops=1)
+   Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.latitude, c.longitude, c.landmark, c.status, c.priority, ca.assigned_at, ca.notes, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))), (CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END), c.created_at
+   Sort Key: (CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END), c.created_at
+   Sort Method: quicksort  Memory: 39kB
+   Buffers: shared hit=370
+   ->  Nested Loop  (cost=0.43..286.46 rows=36 width=279) (actual time=0.019..0.260 rows=45.00 loops=1)
+         Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.latitude, c.longitude, c.landmark, c.status, c.priority, ca.assigned_at, ca.notes, (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval)), CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END, c.created_at
+         Inner Unique: true
+         Join Filter: (w.ward_id = c.ward_id)
+         Rows Removed by Join Filter: 90
+         Buffers: shared hit=364
+         ->  Nested Loop  (cost=0.43..282.41 rows=36 width=242) (actual time=0.013..0.244 rows=45.00 loops=1)
+               Output: ca.assigned_at, ca.notes, c.complaint_id, c.title, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.ward_id, cat.name, cat.sla_hours
+               Inner Unique: true
+               Buffers: shared hit=363
+               ->  Nested Loop  (cost=0.28..280.08 rows=36 width=213) (actual time=0.009..0.233 rows=45.00 loops=1)
+                     Output: ca.assigned_at, ca.notes, c.complaint_id, c.title, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.category_id, c.ward_id
+                     Inner Unique: true
+                     Buffers: shared hit=361
+                     ->  Seq Scan on public.complaint_assignments ca  (cost=0.00..139.25 rows=91 width=98) (actual time=0.002..0.122 rows=91.00 loops=1)
+                           Output: ca.assignment_id, ca.complaint_id, ca.department_id, ca.assigned_to_officer_id, ca.assigned_by_user_id, ca.notes, ca.assigned_at
+                           Filter: (ca.assigned_to_officer_id = '6615eab0-5925-4b68-8eae-9c742835e8cf'::uuid)
+                           Rows Removed by Filter: 4009
+                           Buffers: shared hit=88
+                     ->  Index Scan using pk_complaints on public.complaints c  (cost=0.28..1.55 rows=1 width=131) (actual time=0.001..0.001 rows=0.49 loops=91)
+                           Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                           Index Cond: (c.complaint_id = ca.complaint_id)
+                           Filter: (c.status = ANY ('{ASSIGNED,IN_PROGRESS}'::complaint_status[]))
+                           Rows Removed by Filter: 1
+                           Index Searches: 91
+                           Buffers: shared hit=273
+               ->  Memoize  (cost=0.15..0.16 rows=1 width=37) (actual time=0.000..0.000 rows=1.00 loops=45)
+                     Output: cat.name, cat.sla_hours, cat.category_id
+                     Cache Key: c.category_id
+                     Cache Mode: logical
+                     Hits: 44  Misses: 1  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                     Buffers: shared hit=2
+                     ->  Index Scan using pk_categories on public.categories cat  (cost=0.14..0.15 rows=1 width=37) (actual time=0.002..0.002 rows=1.00 loops=1)
+                           Output: cat.name, cat.sla_hours, cat.category_id
+                           Index Cond: (cat.category_id = c.category_id)
+                           Index Searches: 1
+                           Buffers: shared hit=2
+         ->  Materialize  (cost=0.00..1.07 rows=5 width=37) (actual time=0.000..0.000 rows=3.00 loops=45)
+               Output: w.ward_number, w.ward_name, w.ward_id
+               Storage: Memory  Maximum Storage: 17kB
+               Buffers: shared hit=1
+               ->  Seq Scan on public.wards w  (cost=0.00..1.05 rows=5 width=37) (actual time=0.002..0.003 rows=5.00 loops=1)
+                     Output: w.ward_number, w.ward_name, w.ward_id
+                     Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=424
+ Planning Time: 0.479 ms
+ Execution Time: 0.308 ms
+(54 rows)
+

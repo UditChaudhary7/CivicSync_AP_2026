@@ -1,0 +1,44 @@
+Query ID: 10.4
+Query Name: Geographic Complaint Distribution by Ward & Zone
+Category: Analytics & Reporting
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT w.ward_id, w.ward_number, w.ward_name, w.zone_name, COUNT(c.complaint_id) AS total_complaints, COUNT(c.complaint_id) FILTER (WHERE c.status IN ('REPORTED', 'UNDER_REVIEW', 'ASSIGNED', 'IN_PROGRESS')) AS unresolved_complaints, COUNT(c.complaint_id) FILTER (WHERE c.status IN ('RESOLVED', 'CLOSED')) AS resolved_complaints FROM wards w LEFT JOIN complaints c ON w.ward_id = c.ward_id GROUP BY w.ward_id, w.ward_number, w.ward_name, w.zone_name ORDER BY total_complaints DESC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                       QUERY PLAN                                                                                                                                                       
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=390.97..390.98 rows=5 width=72) (actual time=1.151..1.151 rows=5.00 loops=1)
+   Output: w.ward_id, w.ward_number, w.ward_name, w.zone_name, (count(c.complaint_id)), (count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{REPORTED,UNDER_REVIEW,ASSIGNED,IN_PROGRESS}'::complaint_status[])))), (count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[]))))
+   Sort Key: (count(c.complaint_id)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=232
+   ->  HashAggregate  (cost=390.86..390.91 rows=5 width=72) (actual time=1.143..1.144 rows=5.00 loops=1)
+         Output: w.ward_id, w.ward_number, w.ward_name, w.zone_name, count(c.complaint_id), count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{REPORTED,UNDER_REVIEW,ASSIGNED,IN_PROGRESS}'::complaint_status[]))), count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[])))
+         Group Key: w.ward_number
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=229
+         ->  Hash Right Join  (cost=1.11..303.36 rows=5000 width=68) (actual time=0.009..0.701 rows=5000.00 loops=1)
+               Output: w.ward_number, w.ward_id, w.ward_name, w.zone_name, c.complaint_id, c.status
+               Inner Unique: true
+               Hash Cond: (c.ward_id = w.ward_id)
+               Buffers: shared hit=229
+               ->  Seq Scan on public.complaints c  (cost=0.00..278.00 rows=5000 width=24) (actual time=0.002..0.196 rows=5000.00 loops=1)
+                     Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                     Buffers: shared hit=228
+               ->  Hash  (cost=1.05..1.05 rows=5 width=48) (actual time=0.004..0.004 rows=5.00 loops=1)
+                     Output: w.ward_id, w.ward_number, w.ward_name, w.zone_name
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     Buffers: shared hit=1
+                     ->  Seq Scan on public.wards w  (cost=0.00..1.05 rows=5 width=48) (actual time=0.002..0.002 rows=5.00 loops=1)
+                           Output: w.ward_id, w.ward_number, w.ward_name, w.zone_name
+                           Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=189
+ Planning Time: 0.287 ms
+ Execution Time: 1.177 ms
+(30 rows)
+

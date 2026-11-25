@@ -1,0 +1,27 @@
+Query ID: 9.2
+Query Name: Count Unread User Notifications
+Category: Notifications
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT COUNT(*) AS unread_count FROM notifications WHERE user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4' AND is_read = FALSE;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=494.53..494.54 rows=1 width=8) (actual time=0.462..0.462 rows=1.00 loops=1)
+   Output: count(*)
+   Buffers: shared hit=307
+   ->  Seq Scan on public.notifications  (cost=0.00..494.50 rows=11 width=0) (actual time=0.033..0.461 rows=10.00 loops=1)
+         Output: notification_id, user_id, complaint_id, title, message, is_read, created_at
+         Filter: ((NOT notifications.is_read) AND (notifications.user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4'::uuid))
+         Rows Removed by Filter: 14990
+         Buffers: shared hit=307
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=93
+ Planning Time: 0.131 ms
+ Execution Time: 0.476 ms
+(13 rows)
+

@@ -1,0 +1,65 @@
+Query ID: 6.1
+Query Name: Admin Global Triage Queue (Multi-Filter & Search)
+Category: Triage & Search
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, c.citizen_id, u.name AS citizen_name, cat.name AS category_name, d.name AS department_name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.created_at + (cat.sla_hours * INTERVAL '1 hour') AS sla_deadline, CASE WHEN c.status IN ('RESOLVED', 'CLOSED') THEN 'RESOLVED' WHEN CURRENT_TIMESTAMP > (c.created_at + (cat.sla_hours * INTERVAL '1 hour')) THEN 'SLA_BREACHED' ELSE 'WITHIN_SLA' END AS sla_status FROM complaints c INNER JOIN users u ON c.citizen_id = u.user_id INNER JOIN categories cat ON c.category_id = cat.category_id INNER JOIN departments d ON cat.department_id = d.department_id INNER JOIN wards w ON c.ward_id = w.ward_id WHERE c.status = 'IN_PROGRESS' AND c.category_id = 1 AND c.ward_id = 2 AND (c.title ILIKE '%pothole%' OR c.description ILIKE '%pothole%') ORDER BY CASE c.priority WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 WHEN 'LOW' THEN 4 ELSE 5 END ASC, c.created_at DESC LIMIT 25 OFFSET 0;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                                                                                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=354.01..354.02 rows=4 width=234) (actual time=0.389..0.390 rows=10.00 loops=1)
+   Output: c.complaint_id, c.title, c.citizen_id, u.name, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))), (CASE WHEN (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[])) THEN 'RESOLVED'::text WHEN (CURRENT_TIMESTAMP > (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))) THEN 'SLA_BREACHED'::text ELSE 'WITHIN_SLA'::text END), (CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END)
+   Buffers: shared hit=267
+   ->  Sort  (cost=354.01..354.02 rows=4 width=234) (actual time=0.389..0.389 rows=10.00 loops=1)
+         Output: c.complaint_id, c.title, c.citizen_id, u.name, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))), (CASE WHEN (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[])) THEN 'RESOLVED'::text WHEN (CURRENT_TIMESTAMP > (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))) THEN 'SLA_BREACHED'::text ELSE 'WITHIN_SLA'::text END), (CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END)
+         Sort Key: (CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END), c.created_at DESC
+         Sort Method: quicksort  Memory: 27kB
+         Buffers: shared hit=267
+         ->  Nested Loop  (cost=0.28..353.97 rows=4 width=234) (actual time=0.062..0.382 rows=10.00 loops=1)
+               Output: c.complaint_id, c.title, c.citizen_id, u.name, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval)), CASE WHEN (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[])) THEN 'RESOLVED'::text WHEN (CURRENT_TIMESTAMP > (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))) THEN 'SLA_BREACHED'::text ELSE 'WITHIN_SLA'::text END, CASE c.priority WHEN 'CRITICAL'::complaint_priority THEN 1 WHEN 'HIGH'::complaint_priority THEN 2 WHEN 'MEDIUM'::complaint_priority THEN 3 WHEN 'LOW'::complaint_priority THEN 4 ELSE 5 END
+               Buffers: shared hit=261
+               ->  Seq Scan on public.wards w  (cost=0.00..1.06 rows=1 width=23) (actual time=0.002..0.002 rows=1.00 loops=1)
+                     Output: w.ward_id, w.ward_number, w.ward_name, w.zone_name
+                     Filter: (w.ward_id = 2)
+                     Rows Removed by Filter: 4
+                     Buffers: shared hit=1
+               ->  Nested Loop  (cost=0.28..352.74 rows=4 width=179) (actual time=0.056..0.375 rows=10.00 loops=1)
+                     Output: c.complaint_id, c.title, c.citizen_id, c.status, c.priority, c.created_at, c.ward_id, u.name, cat.name, cat.sla_hours, d.name
+                     Inner Unique: true
+                     Buffers: shared hit=260
+                     ->  Nested Loop  (cost=0.00..342.77 rows=4 width=161) (actual time=0.053..0.365 rows=10.00 loops=1)
+                           Output: c.complaint_id, c.title, c.citizen_id, c.status, c.priority, c.created_at, c.ward_id, cat.name, cat.sla_hours, d.name
+                           Buffers: shared hit=230
+                           ->  Nested Loop  (cost=0.00..2.23 rows=1 width=67) (actual time=0.004..0.004 rows=1.00 loops=1)
+                                 Output: cat.name, cat.sla_hours, cat.category_id, d.name
+                                 Inner Unique: true
+                                 Join Filter: (d.department_id = cat.department_id)
+                                 Buffers: shared hit=2
+                                 ->  Seq Scan on public.categories cat  (cost=0.00..1.11 rows=1 width=41) (actual time=0.002..0.003 rows=1.00 loops=1)
+                                       Output: cat.category_id, cat.name, cat.description, cat.department_id, cat.default_priority, cat.sla_hours
+                                       Filter: (cat.category_id = 1)
+                                       Rows Removed by Filter: 8
+                                       Buffers: shared hit=1
+                                 ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (actual time=0.001..0.001 rows=1.00 loops=1)
+                                       Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+                                       Buffers: shared hit=1
+                           ->  Seq Scan on public.complaints c  (cost=0.00..340.50 rows=4 width=102) (actual time=0.049..0.360 rows=10.00 loops=1)
+                                 Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                                 Filter: ((c.category_id = 1) AND (c.ward_id = 2) AND (c.status = 'IN_PROGRESS'::complaint_status) AND (((c.title)::text ~~* '%pothole%'::text) OR (c.description ~~* '%pothole%'::text)))
+                                 Rows Removed by Filter: 4990
+                                 Buffers: shared hit=228
+                     ->  Index Scan using pk_users on public.users u  (cost=0.28..2.49 rows=1 width=34) (actual time=0.001..0.001 rows=1.00 loops=10)
+                           Output: u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at
+                           Index Cond: (u.user_id = c.citizen_id)
+                           Index Searches: 10
+                           Buffers: shared hit=30
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=442
+ Planning Time: 0.608 ms
+ Execution Time: 0.414 ms
+(51 rows)
+

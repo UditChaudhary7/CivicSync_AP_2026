@@ -1,0 +1,65 @@
+Query ID: 7.2
+Query Name: Public Issues Feed by Ward with Subquery Counts
+Category: Geospatial
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, c.description, cat.name AS category_name, c.landmark, c.status, c.priority, c.created_at, (SELECT COUNT(*) FROM complaint_comments cm WHERE cm.complaint_id = c.complaint_id) AS total_comments, (SELECT COUNT(*) FROM duplicate_complaints dc WHERE dc.canonical_complaint_id = c.complaint_id) AS total_duplicate_reports FROM complaints c INNER JOIN categories cat ON c.category_id = cat.category_id WHERE c.ward_id = 2 AND c.status <> 'REJECTED' ORDER BY c.created_at DESC LIMIT 20 OFFSET 0;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                               QUERY PLAN                                                                                                
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=333.76..4844.51 rows=20 width=322) (actual time=0.740..3.265 rows=20.00 loops=1)
+   Output: c.complaint_id, c.title, c.description, cat.name, c.landmark, c.status, c.priority, c.created_at, ((SubPlan 1)), ((SubPlan 2))
+   Buffers: shared hit=2992
+   ->  Result  (cost=333.76..219105.14 rows=970 width=322) (actual time=0.739..3.264 rows=20.00 loops=1)
+         Output: c.complaint_id, c.title, c.description, cat.name, c.landmark, c.status, c.priority, c.created_at, (SubPlan 1), (SubPlan 2)
+         Buffers: shared hit=2992
+         ->  Sort  (cost=333.76..336.19 rows=970 width=306) (actual time=0.534..0.535 rows=20.00 loops=1)
+               Output: c.complaint_id, c.title, c.description, cat.name, c.landmark, c.status, c.priority, c.created_at
+               Sort Key: c.created_at DESC
+               Sort Method: top-N heapsort  Memory: 41kB
+               Buffers: shared hit=232
+               ->  Hash Join  (cost=1.20..307.95 rows=970 width=306) (actual time=0.015..0.421 rows=1000.00 loops=1)
+                     Output: c.complaint_id, c.title, c.description, cat.name, c.landmark, c.status, c.priority, c.created_at
+                     Inner Unique: true
+                     Hash Cond: (c.category_id = cat.category_id)
+                     Buffers: shared hit=229
+                     ->  Seq Scan on public.complaints c  (cost=0.00..303.00 rows=970 width=281) (actual time=0.004..0.342 rows=1000.00 loops=1)
+                           Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                           Filter: ((c.status <> 'REJECTED'::complaint_status) AND (c.ward_id = 2))
+                           Rows Removed by Filter: 4000
+                           Buffers: shared hit=228
+                     ->  Hash  (cost=1.09..1.09 rows=9 width=33) (actual time=0.008..0.008 rows=9.00 loops=1)
+                           Output: cat.name, cat.category_id
+                           Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                           Buffers: shared hit=1
+                           ->  Seq Scan on public.categories cat  (cost=0.00..1.09 rows=9 width=33) (actual time=0.003..0.004 rows=9.00 loops=1)
+                                 Output: cat.name, cat.category_id
+                                 Buffers: shared hit=1
+         SubPlan 1
+           ->  Aggregate  (cost=221.63..221.64 rows=1 width=8) (actual time=0.133..0.133 rows=1.00 loops=20)
+                 Output: count(*)
+                 Buffers: shared hit=2720
+                 ->  Seq Scan on public.complaint_comments cm  (cost=0.00..221.62 rows=1 width=0) (actual time=0.016..0.132 rows=1.40 loops=20)
+                       Output: cm.comment_id, cm.complaint_id, cm.user_id, cm.comment_text, cm.is_official_update, cm.created_at
+                       Filter: (cm.complaint_id = c.complaint_id)
+                       Rows Removed by Filter: 6849
+                       Buffers: shared hit=2720
+         SubPlan 2
+           ->  Aggregate  (cost=3.88..3.89 rows=1 width=8) (actual time=0.003..0.003 rows=1.00 loops=20)
+                 Output: count(*)
+                 Buffers: shared hit=40
+                 ->  Seq Scan on public.duplicate_complaints dc  (cost=0.00..3.88 rows=1 width=0) (actual time=0.003..0.003 rows=0.05 loops=20)
+                       Output: dc.duplicate_complaint_id, dc.canonical_complaint_id, dc.detected_by_user_id, dc.confidence_score, dc.created_at
+                       Filter: (dc.canonical_complaint_id = c.complaint_id)
+                       Rows Removed by Filter: 150
+                       Buffers: shared hit=40
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=336
+ Planning Time: 0.399 ms
+ Execution Time: 3.292 ms
+(51 rows)
+

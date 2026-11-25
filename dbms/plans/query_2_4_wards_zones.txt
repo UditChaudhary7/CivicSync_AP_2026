@@ -1,0 +1,27 @@
+Query ID: 2.4
+Query Name: Retrieve All Wards and Administrative Zones
+Category: Administrative Lookups
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT w.ward_id, w.ward_number, w.ward_name, w.zone_name FROM wards w ORDER BY w.zone_name ASC, w.ward_number ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                    QUERY PLAN                                                    
+------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1.11..1.12 rows=5 width=48) (actual time=0.009..0.010 rows=5.00 loops=1)
+   Output: ward_id, ward_number, ward_name, zone_name
+   Sort Key: w.zone_name, w.ward_number
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=4
+   ->  Seq Scan on public.wards w  (cost=0.00..1.05 rows=5 width=48) (actual time=0.002..0.003 rows=5.00 loops=1)
+         Output: ward_id, ward_number, ward_name, zone_name
+         Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=105
+ Planning Time: 0.136 ms
+ Execution Time: 0.018 ms
+(13 rows)
+

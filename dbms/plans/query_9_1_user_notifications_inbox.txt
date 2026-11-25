@@ -1,0 +1,41 @@
+Query ID: 9.1
+Query Name: User Notification Inbox (Paginated)
+Category: Notifications
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT n.notification_id, n.user_id, n.complaint_id, c.title AS complaint_title, n.title, n.message, n.is_read, n.created_at FROM notifications n LEFT JOIN complaints c ON n.complaint_id = c.complaint_id WHERE n.user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4' ORDER BY n.is_read ASC, n.created_at DESC LIMIT 20 OFFSET 0;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                            QUERY PLAN                                                                                             
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=531.52..531.56 rows=16 width=178) (actual time=0.489..0.490 rows=15.00 loops=1)
+   Output: n.notification_id, n.user_id, n.complaint_id, c.title, n.title, n.message, n.is_read, n.created_at
+   Buffers: shared hit=360
+   ->  Sort  (cost=531.52..531.56 rows=16 width=178) (actual time=0.489..0.489 rows=15.00 loops=1)
+         Output: n.notification_id, n.user_id, n.complaint_id, c.title, n.title, n.message, n.is_read, n.created_at
+         Sort Key: n.is_read, n.created_at DESC
+         Sort Method: quicksort  Memory: 28kB
+         Buffers: shared hit=360
+         ->  Nested Loop Left Join  (cost=0.28..531.20 rows=16 width=178) (actual time=0.034..0.480 rows=15.00 loops=1)
+               Output: n.notification_id, n.user_id, n.complaint_id, c.title, n.title, n.message, n.is_read, n.created_at
+               Inner Unique: true
+               Buffers: shared hit=352
+               ->  Seq Scan on public.notifications n  (cost=0.00..494.50 rows=16 width=132) (actual time=0.031..0.461 rows=15.00 loops=1)
+                     Output: n.notification_id, n.user_id, n.complaint_id, n.title, n.message, n.is_read, n.created_at
+                     Filter: (n.user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4'::uuid)
+                     Rows Removed by Filter: 14985
+                     Buffers: shared hit=307
+               ->  Index Scan using pk_complaints on public.complaints c  (cost=0.28..2.29 rows=1 width=62) (actual time=0.001..0.001 rows=1.00 loops=15)
+                     Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                     Index Cond: (c.complaint_id = n.complaint_id)
+                     Index Searches: 15
+                     Buffers: shared hit=45
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=291
+ Planning Time: 0.328 ms
+ Execution Time: 0.508 ms
+(27 rows)
+

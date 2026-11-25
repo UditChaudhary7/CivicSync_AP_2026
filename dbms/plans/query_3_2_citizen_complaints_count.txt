@@ -1,0 +1,27 @@
+Query ID: 3.2
+Query Name: Citizen Complaints Total Count
+Category: Citizen Complaint Flow
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT COUNT(*) AS total_complaints FROM complaints WHERE citizen_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4';
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=290.51..290.52 rows=1 width=8) (actual time=0.393..0.394 rows=1.00 loops=1)
+   Output: count(*)
+   Buffers: shared hit=228
+   ->  Seq Scan on public.complaints  (cost=0.00..290.50 rows=5 width=0) (actual time=0.075..0.392 rows=5.00 loops=1)
+         Output: complaint_id, citizen_id, category_id, ward_id, title, description, latitude, longitude, landmark, status, priority, created_at, updated_at
+         Filter: (complaints.citizen_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4'::uuid)
+         Rows Removed by Filter: 4995
+         Buffers: shared hit=228
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=90
+ Planning Time: 0.158 ms
+ Execution Time: 0.422 ms
+(13 rows)
+

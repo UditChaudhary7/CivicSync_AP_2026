@@ -1,0 +1,25 @@
+Query ID: 10.1
+Query Name: Overall Complaint Status Metrics (Top-level KPI Cards)
+Category: Analytics & Reporting
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT COUNT(*) AS total_complaints, COUNT(*) FILTER (WHERE status = 'REPORTED') AS total_reported, COUNT(*) FILTER (WHERE status = 'UNDER_REVIEW') AS total_under_review, COUNT(*) FILTER (WHERE status = 'ASSIGNED') AS total_assigned, COUNT(*) FILTER (WHERE status = 'IN_PROGRESS') AS total_in_progress, COUNT(*) FILTER (WHERE status = 'RESOLVED') AS total_resolved, COUNT(*) FILTER (WHERE status = 'CLOSED') AS total_closed, COUNT(*) FILTER (WHERE status = 'REJECTED') AS total_rejected FROM complaints;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                                                                                                           QUERY PLAN                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=465.50..465.51 rows=1 width=64) (actual time=0.545..0.545 rows=1.00 loops=1)
+   Output: count(*), count(*) FILTER (WHERE (status = 'REPORTED'::complaint_status)), count(*) FILTER (WHERE (status = 'UNDER_REVIEW'::complaint_status)), count(*) FILTER (WHERE (status = 'ASSIGNED'::complaint_status)), count(*) FILTER (WHERE (status = 'IN_PROGRESS'::complaint_status)), count(*) FILTER (WHERE (status = 'RESOLVED'::complaint_status)), count(*) FILTER (WHERE (status = 'CLOSED'::complaint_status)), count(*) FILTER (WHERE (status = 'REJECTED'::complaint_status))
+   Buffers: shared hit=228
+   ->  Seq Scan on public.complaints  (cost=0.00..278.00 rows=5000 width=4) (actual time=0.002..0.189 rows=5000.00 loops=1)
+         Output: complaint_id, citizen_id, category_id, ward_id, title, description, latitude, longitude, landmark, status, priority, created_at, updated_at
+         Buffers: shared hit=228
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=54
+ Planning Time: 0.112 ms
+ Execution Time: 0.565 ms
+(11 rows)
+

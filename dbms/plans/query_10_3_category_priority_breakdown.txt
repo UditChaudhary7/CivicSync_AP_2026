@@ -1,0 +1,56 @@
+Query ID: 10.3
+Query Name: Complaint Volume by Issue Category & Priority Breakdown
+Category: Analytics & Reporting
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT cat.category_id, cat.name AS category_name, d.name AS department_name, cat.default_priority, cat.sla_hours, COUNT(c.complaint_id) AS total_complaints, COUNT(c.complaint_id) FILTER (WHERE c.priority = 'CRITICAL') AS critical_count, COUNT(c.complaint_id) FILTER (WHERE c.priority = 'HIGH') AS high_count, COUNT(c.complaint_id) FILTER (WHERE c.priority = 'MEDIUM') AS medium_count, COUNT(c.complaint_id) FILTER (WHERE c.priority = 'LOW') AS low_count FROM categories cat INNER JOIN departments d ON cat.department_id = d.department_id LEFT JOIN complaints c ON cat.category_id = c.category_id GROUP BY cat.category_id, cat.name, d.name, cat.default_priority, cat.sla_hours ORDER BY total_complaints DESC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                                                                                       QUERY PLAN                                                                                                                                                                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=463.06..463.17 rows=45 width=111) (actual time=1.496..1.496 rows=9.00 loops=1)
+   Output: cat.category_id, cat.name, d.name, cat.default_priority, cat.sla_hours, (count(c.complaint_id)), (count(c.complaint_id) FILTER (WHERE (c.priority = 'CRITICAL'::complaint_priority))), (count(c.complaint_id) FILTER (WHERE (c.priority = 'HIGH'::complaint_priority))), (count(c.complaint_id) FILTER (WHERE (c.priority = 'MEDIUM'::complaint_priority))), (count(c.complaint_id) FILTER (WHERE (c.priority = 'LOW'::complaint_priority)))
+   Sort Key: (count(c.complaint_id)) DESC
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=233
+   ->  HashAggregate  (cost=461.38..461.83 rows=45 width=111) (actual time=1.483..1.484 rows=9.00 loops=1)
+         Output: cat.category_id, cat.name, d.name, cat.default_priority, cat.sla_hours, count(c.complaint_id), count(c.complaint_id) FILTER (WHERE (c.priority = 'CRITICAL'::complaint_priority)), count(c.complaint_id) FILTER (WHERE (c.priority = 'HIGH'::complaint_priority)), count(c.complaint_id) FILTER (WHERE (c.priority = 'MEDIUM'::complaint_priority)), count(c.complaint_id) FILTER (WHERE (c.priority = 'LOW'::complaint_priority))
+         Group Key: cat.name, d.name
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=230
+         ->  Hash Join  (cost=2.32..323.88 rows=5000 width=91) (actual time=0.015..0.976 rows=5000.00 loops=1)
+               Output: cat.name, d.name, cat.category_id, cat.default_priority, cat.sla_hours, c.complaint_id, c.priority
+               Inner Unique: true
+               Hash Cond: (cat.department_id = d.department_id)
+               Buffers: shared hit=230
+               ->  Hash Right Join  (cost=1.20..298.51 rows=5000 width=65) (actual time=0.009..0.675 rows=5000.00 loops=1)
+                     Output: cat.category_id, cat.name, cat.default_priority, cat.sla_hours, cat.department_id, c.complaint_id, c.priority
+                     Inner Unique: true
+                     Hash Cond: (c.category_id = cat.category_id)
+                     Buffers: shared hit=229
+                     ->  Seq Scan on public.complaints c  (cost=0.00..278.00 rows=5000 width=24) (actual time=0.003..0.176 rows=5000.00 loops=1)
+                           Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                           Buffers: shared hit=228
+                     ->  Hash  (cost=1.09..1.09 rows=9 width=45) (actual time=0.003..0.003 rows=9.00 loops=1)
+                           Output: cat.category_id, cat.name, cat.default_priority, cat.sla_hours, cat.department_id
+                           Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                           Buffers: shared hit=1
+                           ->  Seq Scan on public.categories cat  (cost=0.00..1.09 rows=9 width=45) (actual time=0.001..0.001 rows=9.00 loops=1)
+                                 Output: cat.category_id, cat.name, cat.default_priority, cat.sla_hours, cat.department_id
+                                 Buffers: shared hit=1
+               ->  Hash  (cost=1.05..1.05 rows=5 width=34) (actual time=0.003..0.004 rows=5.00 loops=1)
+                     Output: d.name, d.department_id
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     Buffers: shared hit=1
+                     ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (actual time=0.001..0.002 rows=5.00 loops=1)
+                           Output: d.name, d.department_id
+                           Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=224
+ Planning Time: 0.322 ms
+ Execution Time: 1.528 ms
+(42 rows)
+

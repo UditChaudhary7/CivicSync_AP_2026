@@ -1,0 +1,85 @@
+Query ID: 3.1
+Query Name: Citizen 'My Complaints' Paginated List with Thumbnail
+Category: Citizen Complaint Flow
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, cat.name AS category_name, d.name AS department_name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.updated_at, (SELECT img.image_url FROM complaint_images img WHERE img.complaint_id = c.complaint_id ORDER BY img.uploaded_at ASC LIMIT 1) AS primary_thumbnail_url FROM complaints c INNER JOIN categories cat ON c.category_id = cat.category_id INNER JOIN departments d ON cat.department_id = d.department_id INNER JOIN wards w ON c.ward_id = w.ward_id WHERE c.citizen_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4' ORDER BY c.created_at DESC LIMIT 20 OFFSET 0;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                     QUERY PLAN                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=295.01..1380.14 rows=5 width=680) (actual time=0.607..1.073 rows=5.00 loops=1)
+   Output: c.complaint_id, c.title, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.updated_at, ((SubPlan 1))
+   Buffers: shared hit=944
+   ->  Result  (cost=295.01..1380.14 rows=5 width=680) (actual time=0.607..1.073 rows=5.00 loops=1)
+         Output: c.complaint_id, c.title, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.updated_at, (SubPlan 1)
+         Buffers: shared hit=944
+         ->  Sort  (cost=295.01..295.03 rows=5 width=164) (actual time=0.364..0.364 rows=5.00 loops=1)
+               Output: c.complaint_id, c.title, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.updated_at
+               Sort Key: c.created_at DESC
+               Sort Method: quicksort  Memory: 26kB
+               Buffers: shared hit=234
+               ->  Nested Loop  (cost=0.00..294.95 rows=5 width=164) (actual time=0.075..0.359 rows=5.00 loops=1)
+                     Output: c.complaint_id, c.title, cat.name, d.name, w.ward_number, w.zone_name, c.status, c.priority, c.created_at, c.updated_at
+                     Inner Unique: true
+                     Join Filter: (w.ward_id = c.ward_id)
+                     Buffers: shared hit=231
+                     ->  Nested Loop  (cost=0.00..293.57 rows=5 width=149) (actual time=0.071..0.354 rows=5.00 loops=1)
+                           Output: c.complaint_id, c.title, c.status, c.priority, c.created_at, c.updated_at, c.ward_id, cat.name, d.name
+                           Inner Unique: true
+                           Join Filter: (d.department_id = cat.department_id)
+                           Buffers: shared hit=230
+                           ->  Nested Loop  (cost=0.00..292.18 rows=5 width=123) (actual time=0.069..0.351 rows=5.00 loops=1)
+                                 Output: c.complaint_id, c.title, c.status, c.priority, c.created_at, c.updated_at, c.ward_id, cat.name, cat.department_id
+                                 Inner Unique: true
+                                 Join Filter: (cat.category_id = c.category_id)
+                                 Buffers: shared hit=229
+                                 ->  Seq Scan on public.complaints c  (cost=0.00..290.50 rows=5 width=94) (actual time=0.066..0.347 rows=5.00 loops=1)
+                                       Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                                       Filter: (c.citizen_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4'::uuid)
+                                       Rows Removed by Filter: 4995
+                                       Buffers: shared hit=228
+                                 ->  Materialize  (cost=0.00..1.14 rows=9 width=37) (actual time=0.000..0.000 rows=1.00 loops=5)
+                                       Output: cat.name, cat.category_id, cat.department_id
+                                       Storage: Memory  Maximum Storage: 17kB
+                                       Buffers: shared hit=1
+                                       ->  Seq Scan on public.categories cat  (cost=0.00..1.09 rows=9 width=37) (actual time=0.001..0.001 rows=1.00 loops=1)
+                                             Output: cat.name, cat.category_id, cat.department_id
+                                             Buffers: shared hit=1
+                           ->  Materialize  (cost=0.00..1.07 rows=5 width=34) (actual time=0.000..0.000 rows=1.00 loops=5)
+                                 Output: d.name, d.department_id
+                                 Storage: Memory  Maximum Storage: 17kB
+                                 Buffers: shared hit=1
+                                 ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (actual time=0.001..0.001 rows=1.00 loops=1)
+                                       Output: d.name, d.department_id
+                                       Buffers: shared hit=1
+                     ->  Materialize  (cost=0.00..1.07 rows=5 width=23) (actual time=0.001..0.001 rows=1.00 loops=5)
+                           Output: w.ward_number, w.zone_name, w.ward_id
+                           Storage: Memory  Maximum Storage: 17kB
+                           Buffers: shared hit=1
+                           ->  Seq Scan on public.wards w  (cost=0.00..1.05 rows=5 width=23) (actual time=0.002..0.002 rows=1.00 loops=1)
+                                 Output: w.ward_number, w.zone_name, w.ward_id
+                                 Buffers: shared hit=1
+         SubPlan 1
+           ->  Limit  (cost=217.01..217.01 rows=1 width=97) (actual time=0.141..0.141 rows=0.80 loops=5)
+                 Output: img.image_url, img.uploaded_at
+                 Buffers: shared hit=710
+                 ->  Sort  (cost=217.01..217.01 rows=2 width=97) (actual time=0.141..0.141 rows=0.80 loops=5)
+                       Output: img.image_url, img.uploaded_at
+                       Sort Key: img.uploaded_at
+                       Sort Method: quicksort  Memory: 25kB
+                       Buffers: shared hit=710
+                       ->  Seq Scan on public.complaint_images img  (cost=0.00..217.00 rows=2 width=97) (actual time=0.063..0.140 rows=1.20 loops=5)
+                             Output: img.image_url, img.uploaded_at
+                             Filter: (img.complaint_id = c.complaint_id)
+                             Rows Removed by Filter: 5999
+                             Buffers: shared hit=710
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=419
+ Planning Time: 0.544 ms
+ Execution Time: 1.099 ms
+(71 rows)
+

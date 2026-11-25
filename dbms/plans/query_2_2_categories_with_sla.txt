@@ -1,0 +1,39 @@
+Query ID: 2.2
+Query Name: Retrieve Issue Categories with Department & SLA
+Category: Administrative Lookups
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.category_id, c.name AS category_name, c.description, c.department_id, d.name AS department_name, c.default_priority, c.sla_hours FROM categories c INNER JOIN departments d ON c.department_id = d.department_id ORDER BY c.name ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                             QUERY PLAN                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2.39..2.41 rows=9 width=126) (actual time=0.018..0.019 rows=9.00 loops=1)
+   Output: c.category_id, c.name, c.description, c.department_id, d.name, c.default_priority, c.sla_hours
+   Sort Key: c.name
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=5
+   ->  Hash Join  (cost=1.11..2.25 rows=9 width=126) (actual time=0.009..0.011 rows=9.00 loops=1)
+         Output: c.category_id, c.name, c.description, c.department_id, d.name, c.default_priority, c.sla_hours
+         Inner Unique: true
+         Hash Cond: (c.department_id = d.department_id)
+         Buffers: shared hit=2
+         ->  Seq Scan on public.categories c  (cost=0.00..1.09 rows=9 width=96) (actual time=0.001..0.001 rows=9.00 loops=1)
+               Output: c.category_id, c.name, c.description, c.department_id, c.default_priority, c.sla_hours
+               Buffers: shared hit=1
+         ->  Hash  (cost=1.05..1.05 rows=5 width=34) (actual time=0.005..0.005 rows=5.00 loops=1)
+               Output: d.name, d.department_id
+               Buckets: 1024  Batches: 1  Memory Usage: 9kB
+               Buffers: shared hit=1
+               ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (actual time=0.001..0.002 rows=5.00 loops=1)
+                     Output: d.name, d.department_id
+                     Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=227
+ Planning Time: 0.265 ms
+ Execution Time: 0.040 ms
+(25 rows)
+

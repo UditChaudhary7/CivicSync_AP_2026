@@ -1,0 +1,29 @@
+Query ID: 4.1
+Query Name: Retrieve Photographic Evidence Attachments
+Category: Sub-Entities
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT ci.image_id, ci.complaint_id, ci.image_url, ci.caption, ci.uploaded_at FROM complaint_images ci WHERE ci.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0' ORDER BY ci.uploaded_at ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                           QUERY PLAN                                                            
+---------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=217.01..217.01 rows=1 width=160) (actual time=0.237..0.237 rows=2.00 loops=1)
+   Output: image_id, complaint_id, image_url, caption, uploaded_at
+   Sort Key: ci.uploaded_at
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=145
+   ->  Seq Scan on public.complaint_images ci  (cost=0.00..217.00 rows=1 width=160) (actual time=0.002..0.232 rows=2.00 loops=1)
+         Output: image_id, complaint_id, image_url, caption, uploaded_at
+         Filter: (ci.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0'::uuid)
+         Rows Removed by Filter: 5998
+         Buffers: shared hit=142
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=150
+ Planning Time: 0.160 ms
+ Execution Time: 0.248 ms
+(15 rows)
+

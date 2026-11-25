@@ -1,0 +1,38 @@
+Query ID: 4.2
+Query Name: Retrieve Immutable Complaint Status Audit Trail
+Category: Sub-Entities
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT sh.history_id, sh.complaint_id, sh.previous_status, sh.new_status, sh.changed_by_user_id, u.name AS changed_by_name, u.role AS changed_by_role, sh.remarks, sh.created_at AS transition_timestamp FROM complaint_status_history sh INNER JOIN users u ON sh.changed_by_user_id = u.user_id WHERE sh.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0' ORDER BY sh.created_at ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                     QUERY PLAN                                                                      
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=363.75..363.75 rows=2 width=127) (actual time=0.368..0.368 rows=1.00 loops=1)
+   Output: sh.history_id, sh.complaint_id, sh.previous_status, sh.new_status, sh.changed_by_user_id, u.name, u.role, sh.remarks, sh.created_at
+   Sort Key: sh.created_at
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=211
+   ->  Nested Loop  (cost=0.28..363.74 rows=2 width=127) (actual time=0.006..0.363 rows=1.00 loops=1)
+         Output: sh.history_id, sh.complaint_id, sh.previous_status, sh.new_status, sh.changed_by_user_id, u.name, u.role, sh.remarks, sh.created_at
+         Inner Unique: true
+         Buffers: shared hit=208
+         ->  Seq Scan on public.complaint_status_history sh  (cost=0.00..358.75 rows=2 width=105) (actual time=0.003..0.360 rows=1.00 loops=1)
+               Output: sh.history_id, sh.complaint_id, sh.previous_status, sh.new_status, sh.changed_by_user_id, sh.remarks, sh.created_at
+               Filter: (sh.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0'::uuid)
+               Rows Removed by Filter: 12299
+               Buffers: shared hit=205
+         ->  Index Scan using pk_users on public.users u  (cost=0.28..2.49 rows=1 width=38) (actual time=0.002..0.002 rows=1.00 loops=1)
+               Output: u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at
+               Index Cond: (u.user_id = sh.changed_by_user_id)
+               Index Searches: 1
+               Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=311
+ Planning Time: 0.342 ms
+ Execution Time: 0.393 ms
+(24 rows)
+

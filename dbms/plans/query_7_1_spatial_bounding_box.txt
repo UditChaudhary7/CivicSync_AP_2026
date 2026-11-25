@@ -1,0 +1,36 @@
+Query ID: 7.1
+Query Name: Spatial Bounding-Box Complaint Search (Map Viewpins)
+Category: Geospatial
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, cat.name AS category_name, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at FROM complaints c INNER JOIN categories cat ON c.category_id = cat.category_id WHERE c.latitude BETWEEN 28.985000 AND 29.015000 AND c.longitude BETWEEN 77.015000 AND 77.035000 AND c.status NOT IN ('CLOSED', 'REJECTED');
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                               QUERY PLAN                                                                                                
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=1.20..348.34 rows=1718 width=152) (actual time=0.014..0.660 rows=1730.00 loops=1)
+   Output: c.complaint_id, c.title, cat.name, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at
+   Inner Unique: true
+   Hash Cond: (c.category_id = cat.category_id)
+   Buffers: shared hit=229
+   ->  Seq Scan on public.complaints c  (cost=0.00..340.50 rows=1718 width=127) (actual time=0.006..0.540 rows=1730.00 loops=1)
+         Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+         Filter: ((c.latitude >= 28.985000) AND (c.latitude <= 29.015000) AND (c.longitude >= 77.015000) AND (c.longitude <= 77.035000) AND (c.status <> ALL ('{CLOSED,REJECTED}'::complaint_status[])))
+         Rows Removed by Filter: 3270
+         Buffers: shared hit=228
+   ->  Hash  (cost=1.09..1.09 rows=9 width=33) (actual time=0.004..0.005 rows=9.00 loops=1)
+         Output: cat.name, cat.category_id
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=1
+         ->  Seq Scan on public.categories cat  (cost=0.00..1.09 rows=9 width=33) (actual time=0.001..0.001 rows=9.00 loops=1)
+               Output: cat.name, cat.category_id
+               Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=294
+ Planning Time: 0.349 ms
+ Execution Time: 0.702 ms
+(22 rows)
+

@@ -1,0 +1,36 @@
+Query ID: 1.2
+Query Name: User Profile with Department Details
+Category: Authentication
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT u.user_id, u.name, u.email, u.phone, u.role, u.department_id, d.name AS department_name, d.contact_email AS department_email, u.created_at, u.updated_at FROM users u LEFT JOIN departments d ON u.department_id = d.department_id WHERE u.user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4';
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                               QUERY PLAN                                                                
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Hash Right Join  (cost=2.50..3.57 rows=1 width=158) (actual time=0.013..0.015 rows=1.00 loops=1)
+   Output: u.user_id, u.name, u.email, u.phone, u.role, u.department_id, d.name, d.contact_email, u.created_at, u.updated_at
+   Inner Unique: true
+   Hash Cond: (d.department_id = u.department_id)
+   Buffers: shared hit=4
+   ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=66) (actual time=0.001..0.002 rows=5.00 loops=1)
+         Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+         Buffers: shared hit=1
+   ->  Hash  (cost=2.49..2.49 rows=1 width=96) (actual time=0.006..0.007 rows=1.00 loops=1)
+         Output: u.user_id, u.name, u.email, u.phone, u.role, u.department_id, u.created_at, u.updated_at
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=3
+         ->  Index Scan using pk_users on public.users u  (cost=0.28..2.49 rows=1 width=96) (actual time=0.005..0.005 rows=1.00 loops=1)
+               Output: u.user_id, u.name, u.email, u.phone, u.role, u.department_id, u.created_at, u.updated_at
+               Index Cond: (u.user_id = '25c648d0-b409-4fef-a0ba-b13cec7867d4'::uuid)
+               Index Searches: 1
+               Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=271
+ Planning Time: 0.356 ms
+ Execution Time: 0.049 ms
+(22 rows)
+

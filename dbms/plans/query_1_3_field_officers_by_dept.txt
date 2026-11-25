@@ -1,0 +1,37 @@
+Query ID: 1.3
+Query Name: List Field Officers by Department
+Category: Authentication
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT u.user_id AS officer_id, u.name AS officer_name, u.email AS officer_email, u.phone AS officer_phone, d.name AS department_name FROM users u INNER JOIN departments d ON u.department_id = d.department_id WHERE u.department_id = 1 AND u.role = 'STAFF' ORDER BY u.name ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                           QUERY PLAN                                                            
+---------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=40.11..40.11 rows=2 width=102) (actual time=0.066..0.066 rows=16.00 loops=1)
+   Output: u.user_id, u.name, u.email, u.phone, d.name
+   Sort Key: u.name
+   Sort Method: quicksort  Memory: 27kB
+   Buffers: shared hit=28
+   ->  Nested Loop  (cost=0.00..40.10 rows=2 width=102) (actual time=0.006..0.058 rows=16.00 loops=1)
+         Output: u.user_id, u.name, u.email, u.phone, d.name
+         Buffers: shared hit=25
+         ->  Seq Scan on public.departments d  (cost=0.00..1.06 rows=1 width=34) (actual time=0.003..0.003 rows=1.00 loops=1)
+               Output: d.department_id, d.name, d.contact_email, d.contact_phone, d.created_at
+               Filter: (d.department_id = 1)
+               Rows Removed by Filter: 4
+               Buffers: shared hit=1
+         ->  Seq Scan on public.users u  (cost=0.00..39.02 rows=2 width=76) (actual time=0.003..0.054 rows=16.00 loops=1)
+               Output: u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at
+               Filter: ((u.department_id = 1) AND (u.role = 'STAFF'::user_role))
+               Rows Removed by Filter: 985
+               Buffers: shared hit=24
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=173
+ Planning Time: 0.240 ms
+ Execution Time: 0.079 ms
+(23 rows)
+

@@ -1,0 +1,86 @@
+Query ID: 6.2
+Query Name: Department-Specific Complaint Triage Queue
+Category: Triage & Search
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, cat.name AS category_name, w.ward_number, w.ward_name, c.status, c.priority, c.created_at, c.created_at + (cat.sla_hours * INTERVAL '1 hour') AS sla_deadline, (SELECT off.name FROM complaint_assignments ca LEFT JOIN users off ON ca.assigned_to_officer_id = off.user_id WHERE ca.complaint_id = c.complaint_id ORDER BY ca.assigned_at DESC LIMIT 1) AS currently_assigned_to FROM complaints c INNER JOIN categories cat ON c.category_id = cat.category_id INNER JOIN wards w ON c.ward_id = w.ward_id WHERE cat.department_id = 1 AND c.status = 'REPORTED' ORDER BY c.created_at DESC LIMIT 20 OFFSET 0;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                  QUERY PLAN                                                                                                   
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=304.97..3140.61 rows=20 width=366) (actual time=0.526..2.000 rows=20.00 loops=1)
+   Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.status, c.priority, c.created_at, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))), ((SubPlan 1))
+   Buffers: shared hit=2002
+   ->  Result  (cost=304.97..23982.55 rows=167 width=366) (actual time=0.526..1.999 rows=20.00 loops=1)
+         Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.status, c.priority, c.created_at, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))), (SubPlan 1)
+         Buffers: shared hit=2002
+         ->  Sort  (cost=304.97..305.39 rows=167 width=148) (actual time=0.409..0.410 rows=20.00 loops=1)
+               Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.status, c.priority, c.created_at, ((c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval)))
+               Sort Key: c.created_at DESC
+               Sort Method: top-N heapsort  Memory: 32kB
+               Buffers: shared hit=242
+               ->  Nested Loop  (cost=1.28..300.53 rows=167 width=148) (actual time=0.013..0.388 rows=163.00 loops=1)
+                     Output: c.complaint_id, c.title, cat.name, w.ward_number, w.ward_name, c.status, c.priority, c.created_at, (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))
+                     Inner Unique: true
+                     Buffers: shared hit=239
+                     ->  Hash Join  (cost=1.14..294.53 rows=167 width=115) (actual time=0.009..0.352 rows=163.00 loops=1)
+                           Output: c.complaint_id, c.title, c.status, c.priority, c.created_at, c.ward_id, cat.name, cat.sla_hours
+                           Inner Unique: true
+                           Hash Cond: (c.category_id = cat.category_id)
+                           Buffers: shared hit=229
+                           ->  Seq Scan on public.complaints c  (cost=0.00..290.50 rows=750 width=86) (actual time=0.002..0.317 rows=750.00 loops=1)
+                                 Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                                 Filter: (c.status = 'REPORTED'::complaint_status)
+                                 Rows Removed by Filter: 4250
+                                 Buffers: shared hit=228
+                           ->  Hash  (cost=1.11..1.11 rows=2 width=37) (actual time=0.005..0.005 rows=2.00 loops=1)
+                                 Output: cat.name, cat.sla_hours, cat.category_id
+                                 Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                 Buffers: shared hit=1
+                                 ->  Seq Scan on public.categories cat  (cost=0.00..1.11 rows=2 width=37) (actual time=0.001..0.002 rows=2.00 loops=1)
+                                       Output: cat.name, cat.sla_hours, cat.category_id
+                                       Filter: (cat.department_id = 1)
+                                       Rows Removed by Filter: 7
+                                       Buffers: shared hit=1
+                     ->  Memoize  (cost=0.14..0.16 rows=1 width=37) (actual time=0.000..0.000 rows=1.00 loops=163)
+                           Output: w.ward_number, w.ward_name, w.ward_id
+                           Cache Key: c.ward_id
+                           Cache Mode: logical
+                           Hits: 158  Misses: 5  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                           Buffers: shared hit=10
+                           ->  Index Scan using pk_wards on public.wards w  (cost=0.13..0.15 rows=1 width=37) (actual time=0.000..0.000 rows=1.00 loops=5)
+                                 Output: w.ward_number, w.ward_name, w.ward_id
+                                 Index Cond: (w.ward_id = c.ward_id)
+                                 Index Searches: 5
+                                 Buffers: shared hit=10
+         SubPlan 1
+           ->  Limit  (cost=141.76..141.76 rows=1 width=26) (actual time=0.079..0.079 rows=0.00 loops=20)
+                 Output: off.name, ca.assigned_at
+                 Buffers: shared hit=1760
+                 ->  Sort  (cost=141.76..141.76 rows=1 width=26) (actual time=0.079..0.079 rows=0.00 loops=20)
+                       Output: off.name, ca.assigned_at
+                       Sort Key: ca.assigned_at DESC
+                       Sort Method: quicksort  Memory: 25kB
+                       Buffers: shared hit=1760
+                       ->  Nested Loop Left Join  (cost=0.28..141.75 rows=1 width=26) (actual time=0.079..0.079 rows=0.00 loops=20)
+                             Output: off.name, ca.assigned_at
+                             Inner Unique: true
+                             Buffers: shared hit=1760
+                             ->  Seq Scan on public.complaint_assignments ca  (cost=0.00..139.25 rows=1 width=24) (actual time=0.078..0.078 rows=0.00 loops=20)
+                                   Output: ca.assignment_id, ca.complaint_id, ca.department_id, ca.assigned_to_officer_id, ca.assigned_by_user_id, ca.notes, ca.assigned_at
+                                   Filter: (ca.complaint_id = c.complaint_id)
+                                   Rows Removed by Filter: 4100
+                                   Buffers: shared hit=1760
+                             ->  Index Scan using pk_users on public.users off  (cost=0.28..2.49 rows=1 width=34) (never executed)
+                                   Output: off.user_id, off.name, off.email, off.phone, off.password_hash, off.role, off.department_id, off.created_at, off.updated_at
+                                   Index Cond: (off.user_id = ca.assigned_to_officer_id)
+                                   Index Searches: 0
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=489
+ Planning Time: 0.531 ms
+ Execution Time: 2.036 ms
+(72 rows)
+

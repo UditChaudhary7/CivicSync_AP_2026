@@ -1,0 +1,38 @@
+Query ID: 4.3
+Query Name: Retrieve Threaded Discussion Comments & Updates
+Category: Sub-Entities
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT cm.comment_id, cm.complaint_id, cm.user_id, u.name AS author_name, u.role AS author_role, cm.comment_text, cm.is_official_update, cm.created_at FROM complaint_comments cm INNER JOIN users u ON cm.user_id = u.user_id WHERE cm.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0' ORDER BY cm.created_at ASC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                               QUERY PLAN                                                                
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=224.13..224.14 rows=1 width=151) (actual time=0.187..0.187 rows=1.00 loops=1)
+   Output: cm.comment_id, cm.complaint_id, cm.user_id, u.name, u.role, cm.comment_text, cm.is_official_update, cm.created_at
+   Sort Key: cm.created_at
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=142
+   ->  Nested Loop  (cost=0.28..224.12 rows=1 width=151) (actual time=0.005..0.183 rows=1.00 loops=1)
+         Output: cm.comment_id, cm.complaint_id, cm.user_id, u.name, u.role, cm.comment_text, cm.is_official_update, cm.created_at
+         Inner Unique: true
+         Buffers: shared hit=139
+         ->  Seq Scan on public.complaint_comments cm  (cost=0.00..221.62 rows=1 width=129) (actual time=0.002..0.181 rows=1.00 loops=1)
+               Output: cm.comment_id, cm.complaint_id, cm.user_id, cm.comment_text, cm.is_official_update, cm.created_at
+               Filter: (cm.complaint_id = '67ad163a-5f0a-4a0d-8623-c6f7c11464a0'::uuid)
+               Rows Removed by Filter: 6849
+               Buffers: shared hit=136
+         ->  Index Scan using pk_users on public.users u  (cost=0.28..2.49 rows=1 width=38) (actual time=0.002..0.002 rows=1.00 loops=1)
+               Output: u.user_id, u.name, u.email, u.phone, u.password_hash, u.role, u.department_id, u.created_at, u.updated_at
+               Index Cond: (u.user_id = cm.user_id)
+               Index Searches: 1
+               Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=308
+ Planning Time: 0.268 ms
+ Execution Time: 0.204 ms
+(24 rows)
+

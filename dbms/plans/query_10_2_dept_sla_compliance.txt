@@ -1,0 +1,56 @@
+Query ID: 10.2
+Query Name: Departmental Performance & SLA Compliance Metrics
+Category: Analytics & Reporting
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT d.department_id, d.name AS department_name, COUNT(c.complaint_id) AS total_complaints, COUNT(c.complaint_id) FILTER (WHERE c.status IN ('RESOLVED', 'CLOSED')) AS resolved_count, COUNT(c.complaint_id) FILTER (WHERE c.status IN ('REPORTED', 'UNDER_REVIEW', 'ASSIGNED', 'IN_PROGRESS')) AS active_backlog, COUNT(c.complaint_id) FILTER (WHERE c.status NOT IN ('RESOLVED', 'CLOSED') AND CURRENT_TIMESTAMP > (c.created_at + (cat.sla_hours * INTERVAL '1 hour'))) AS sla_breached_count, ROUND(COALESCE(AVG(EXTRACT(EPOCH FROM (c.updated_at - c.created_at)) / 3600) FILTER (WHERE c.status IN ('RESOLVED', 'CLOSED')), 0)::NUMERIC, 2) AS avg_resolution_time_hours FROM departments d LEFT JOIN categories cat ON d.department_id = cat.department_id LEFT JOIN complaints c ON cat.category_id = c.category_id GROUP BY d.department_id, d.name ORDER BY total_complaints DESC;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                                                                                                                                                                                                                            QUERY PLAN                                                                                                                                                                                                                                                                                                                                             
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=561.51..561.52 rows=5 width=98) (actual time=1.917..1.917 rows=5.00 loops=1)
+   Output: d.department_id, d.name, (count(c.complaint_id)), (count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[])))), (count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{REPORTED,UNDER_REVIEW,ASSIGNED,IN_PROGRESS}'::complaint_status[])))), (count(c.complaint_id) FILTER (WHERE ((c.status <> ALL ('{RESOLVED,CLOSED}'::complaint_status[])) AND (CURRENT_TIMESTAMP > (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval)))))), (round(COALESCE(avg((EXTRACT(epoch FROM (c.updated_at - c.created_at)) / '3600'::numeric)) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[]))), '0'::numeric), 2))
+   Sort Key: (count(c.complaint_id)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=233
+   ->  HashAggregate  (cost=561.38..561.45 rows=5 width=98) (actual time=1.909..1.911 rows=5.00 loops=1)
+         Output: d.department_id, d.name, count(c.complaint_id), count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[]))), count(c.complaint_id) FILTER (WHERE (c.status = ANY ('{REPORTED,UNDER_REVIEW,ASSIGNED,IN_PROGRESS}'::complaint_status[]))), count(c.complaint_id) FILTER (WHERE ((c.status <> ALL ('{RESOLVED,CLOSED}'::complaint_status[])) AND (CURRENT_TIMESTAMP > (c.created_at + ((cat.sla_hours)::double precision * '01:00:00'::interval))))), round(COALESCE(avg((EXTRACT(epoch FROM (c.updated_at - c.created_at)) / '3600'::numeric)) FILTER (WHERE (c.status = ANY ('{RESOLVED,CLOSED}'::complaint_status[]))), '0'::numeric), 2)
+         Group Key: d.name
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=230
+         ->  Hash Right Join  (cost=2.32..323.88 rows=5000 width=74) (actual time=0.023..1.052 rows=5000.00 loops=1)
+               Output: d.name, d.department_id, c.complaint_id, c.status, c.created_at, cat.sla_hours, c.updated_at
+               Inner Unique: true
+               Hash Cond: (cat.department_id = d.department_id)
+               Buffers: shared hit=230
+               ->  Hash Right Join  (cost=1.20..298.51 rows=5000 width=44) (actual time=0.010..0.713 rows=5000.00 loops=1)
+                     Output: cat.sla_hours, cat.department_id, c.complaint_id, c.status, c.created_at, c.updated_at
+                     Inner Unique: true
+                     Hash Cond: (c.category_id = cat.category_id)
+                     Buffers: shared hit=229
+                     ->  Seq Scan on public.complaints c  (cost=0.00..278.00 rows=5000 width=40) (actual time=0.002..0.190 rows=5000.00 loops=1)
+                           Output: c.complaint_id, c.citizen_id, c.category_id, c.ward_id, c.title, c.description, c.latitude, c.longitude, c.landmark, c.status, c.priority, c.created_at, c.updated_at
+                           Buffers: shared hit=228
+                     ->  Hash  (cost=1.09..1.09 rows=9 width=12) (actual time=0.004..0.004 rows=9.00 loops=1)
+                           Output: cat.sla_hours, cat.department_id, cat.category_id
+                           Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                           Buffers: shared hit=1
+                           ->  Seq Scan on public.categories cat  (cost=0.00..1.09 rows=9 width=12) (actual time=0.002..0.003 rows=9.00 loops=1)
+                                 Output: cat.sla_hours, cat.department_id, cat.category_id
+                                 Buffers: shared hit=1
+               ->  Hash  (cost=1.05..1.05 rows=5 width=34) (actual time=0.010..0.010 rows=5.00 loops=1)
+                     Output: d.department_id, d.name
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     Buffers: shared hit=1
+                     ->  Seq Scan on public.departments d  (cost=0.00..1.05 rows=5 width=34) (actual time=0.001..0.002 rows=5.00 loops=1)
+                           Output: d.department_id, d.name
+                           Buffers: shared hit=1
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=236
+ Planning Time: 0.403 ms
+ Execution Time: 1.951 ms
+(42 rows)
+

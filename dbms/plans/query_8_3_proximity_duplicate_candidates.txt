@@ -1,0 +1,32 @@
+Query ID: 8.3
+Query Name: Proximity & Category Duplicate Candidates Search
+Category: Duplicate Management
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT c.complaint_id, c.title, c.description, c.latitude, c.longitude, c.status, c.created_at, ABS(c.latitude - 28.995000) + ABS(c.longitude - 77.020000) AS manhattan_distance_approx FROM complaints c WHERE c.category_id = 1 AND c.ward_id = 2 AND c.complaint_id <> '67ad163a-5f0a-4a0d-8623-c6f7c11464a0' AND c.status IN ('REPORTED', 'UNDER_REVIEW', 'ASSIGNED', 'IN_PROGRESS') AND c.created_at >= CURRENT_TIMESTAMP - (7 * INTERVAL '1 day') ORDER BY manhattan_distance_approx ASC LIMIT 5;
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                                          QUERY PLAN                                                                                                                                           
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=378.19..378.20 rows=5 width=292) (actual time=0.351..0.351 rows=0.00 loops=1)
+   Output: complaint_id, title, description, latitude, longitude, status, created_at, ((abs((latitude - 28.995000)) + abs((longitude - 77.020000))))
+   Buffers: shared hit=231
+   ->  Sort  (cost=378.19..378.20 rows=7 width=292) (actual time=0.351..0.351 rows=0.00 loops=1)
+         Output: complaint_id, title, description, latitude, longitude, status, created_at, ((abs((latitude - 28.995000)) + abs((longitude - 77.020000))))
+         Sort Key: ((abs((c.latitude - 28.995000)) + abs((c.longitude - 77.020000))))
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=231
+         ->  Seq Scan on public.complaints c  (cost=0.00..378.09 rows=7 width=292) (actual time=0.347..0.347 rows=0.00 loops=1)
+               Output: complaint_id, title, description, latitude, longitude, status, created_at, (abs((latitude - 28.995000)) + abs((longitude - 77.020000)))
+               Filter: ((c.complaint_id <> '67ad163a-5f0a-4a0d-8623-c6f7c11464a0'::uuid) AND (c.category_id = 1) AND (c.ward_id = 2) AND (c.status = ANY ('{REPORTED,UNDER_REVIEW,ASSIGNED,IN_PROGRESS}'::complaint_status[])) AND (c.created_at >= (CURRENT_TIMESTAMP - '7 days'::interval)))
+               Rows Removed by Filter: 5000
+               Buffers: shared hit=228
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=144
+ Planning Time: 0.166 ms
+ Execution Time: 0.361 ms
+(18 rows)
+

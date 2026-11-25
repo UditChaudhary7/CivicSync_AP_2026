@@ -1,0 +1,33 @@
+Query ID: 8.2
+Query Name: Check if a Complaint is Flagged as a Duplicate
+Category: Duplicate Management
+Benchmark Environment: PostgreSQL 18.0 (MacBook Pro Apple Silicon, POSIX shm, 128MB shared_buffers)
+Target SQL:
+SELECT dc.duplicate_complaint_id, dc.canonical_complaint_id, master.title AS canonical_title, master.status AS canonical_status, dc.confidence_score, dc.created_at AS linked_at FROM duplicate_complaints dc INNER JOIN complaints master ON dc.canonical_complaint_id = master.complaint_id WHERE dc.duplicate_complaint_id = '5abeca65-0bb9-45bd-aa35-48f8d399214b';
+
+================================================================================
+POSTGRESQL EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) EXECUTION PLAN
+================================================================================
+                                                                                                                       QUERY PLAN                                                                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.43..4.86 rows=1 width=95) (actual time=0.006..0.006 rows=1.00 loops=1)
+   Output: dc.duplicate_complaint_id, dc.canonical_complaint_id, master.title, master.status, dc.confidence_score, dc.created_at
+   Inner Unique: true
+   Buffers: shared hit=5
+   ->  Index Scan using pk_duplicate_complaints on public.duplicate_complaints dc  (cost=0.14..2.36 rows=1 width=45) (actual time=0.003..0.003 rows=1.00 loops=1)
+         Output: dc.duplicate_complaint_id, dc.canonical_complaint_id, dc.detected_by_user_id, dc.confidence_score, dc.created_at
+         Index Cond: (dc.duplicate_complaint_id = '5abeca65-0bb9-45bd-aa35-48f8d399214b'::uuid)
+         Index Searches: 1
+         Buffers: shared hit=2
+   ->  Index Scan using pk_complaints on public.complaints master  (cost=0.28..2.50 rows=1 width=66) (actual time=0.003..0.003 rows=1.00 loops=1)
+         Output: master.complaint_id, master.citizen_id, master.category_id, master.ward_id, master.title, master.description, master.latitude, master.longitude, master.landmark, master.status, master.priority, master.created_at, master.updated_at
+         Index Cond: (master.complaint_id = dc.canonical_complaint_id)
+         Index Searches: 1
+         Buffers: shared hit=3
+ Settings: random_page_cost = '1.1'
+ Planning:
+   Buffers: shared hit=213
+ Planning Time: 0.256 ms
+ Execution Time: 0.026 ms
+(19 rows)
+
