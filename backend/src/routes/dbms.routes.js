@@ -1,9 +1,9 @@
-// src/routes/dbms.routes.js - Direct Interface to DBMS SQL Schema & Queries (CP2 & CP3)
+// src/routes/dbms.routes.js - College DBMS Coursework ke SQL Schema aur Queries ko run karne ke live endpoints
 const express = require('express');
 const router = express.Router();
 const prisma = require('../prisma');
 
-// 1. Overview of all DBMS tables and row counts
+// 1. DBMS tables ka overview aur row counts nikaalna
 router.get('/overview', async (req, res, next) => {
   try {
     const tableNames = [
@@ -14,18 +14,20 @@ router.get('/overview', async (req, res, next) => {
     ];
 
     const stats = {};
+    // Har table ke total rows count kar rahe hain raw SQL query se
     for (const tbl of tableNames) {
       try {
         const result = await prisma.$queryRawUnsafe(`SELECT COUNT(*) as cnt FROM "${tbl}";`);
         stats[tbl] = Number(result[0].cnt);
       } catch (e) {
+        // Agar table create nahi hui ho toh count 0 show karo
         stats[tbl] = 0;
       }
     }
 
     res.json({
       success: true,
-      message: 'CivicSync DBMS Schema is fully synchronized.',
+      message: 'CivicSync DBMS Schema successfully sync hai.',
       schemaVersion: 'PostgreSQL 16+ & SQLite Compatible',
       tables: stats
     });
@@ -34,7 +36,7 @@ router.get('/overview', async (req, res, next) => {
   }
 });
 
-// 2. Query 2.1: Retrieve All Municipal Departments
+// 2. Query 2.1: Saare Municipal Departments fetch karna aur unki categories count karna
 router.get('/departments', async (req, res, next) => {
   try {
     const depts = await prisma.$queryRawUnsafe(`
@@ -51,7 +53,7 @@ router.get('/departments', async (req, res, next) => {
       ORDER BY d.name ASC;
     `);
 
-    // Format BigInt values for JSON serialization
+    // BigInt values ko JSON serialization ke liye standard Number mein convert kar rahe hain
     const serialized = JSON.parse(JSON.stringify(depts, (key, value) =>
       typeof value === 'bigint' ? Number(value) : value
     ));
@@ -62,7 +64,7 @@ router.get('/departments', async (req, res, next) => {
   }
 });
 
-// 3. Query 2.2: Retrieve Issue Categories with Responsible Department & SLA
+// 3. Query 2.2: Issue Categories unke responsible department aur SLA hours ke saath fetch karna
 router.get('/categories', async (req, res, next) => {
   try {
     const categories = await prisma.$queryRawUnsafe(`
@@ -85,7 +87,7 @@ router.get('/categories', async (req, res, next) => {
   }
 });
 
-// 4. Query 2.4: Retrieve All Wards and Administrative Zones
+// 4. Query 2.4: Saare Municipal Wards aur Administrative Zones fetch karna
 router.get('/wards', async (req, res, next) => {
   try {
     const wards = await prisma.$queryRawUnsafe(`
@@ -104,7 +106,7 @@ router.get('/wards', async (req, res, next) => {
   }
 });
 
-// 5. Query 10.1: Overall Complaint Status KPI Metrics
+// 5. Query 10.1: Top-level Complaint Status KPI Metrics nikaalna
 router.get('/kpi', async (req, res, next) => {
   try {
     const metrics = await prisma.$queryRawUnsafe(`
@@ -127,17 +129,18 @@ router.get('/kpi', async (req, res, next) => {
   }
 });
 
-// 6. Safe SQL Query Execution (Read-only SELECT queries)
+// 6. Safe SQL Query Execution
 router.post('/execute', async (req, res, next) => {
   try {
     const { query } = req.body;
     if (!query || typeof query !== 'string') {
-      return res.status(400).json({ success: false, message: 'SQL query string is required.' });
+      return res.status(400).json({ success: false, message: 'SQL query string provide karna zaroori hai.' });
     }
 
     const trimmed = query.trim();
+    // Security check: Sirf SELECT read queries allow karo, koi data modify na kar sake
     if (!trimmed.toLowerCase().startsWith('select')) {
-      return res.status(403).json({ success: false, message: 'Only SELECT read queries are permitted via this endpoint.' });
+      return res.status(403).json({ success: false, message: 'Security: Is endpoint se sirf SELECT read queries execute ho sakti hain.' });
     }
 
     const rows = await prisma.$queryRawUnsafe(trimmed);

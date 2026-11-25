@@ -1,10 +1,10 @@
-// prisma/seed.js - Prisma Seeding Script for College Viva Demonstration & DBMS Schema
+// prisma/seed.js - College viva presentation aur testing ke liye sample database data load karne ka script
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// Calculate priority score based on severity, upvotes, and waiting days
+// Issue ka priority score nikaalne ka helper function (severity, upvotes aur waiting time ke basis par)
 function calculatePriority(severity, upvotes, createdAt) {
   const points = { CRITICAL: 40, HIGH: 30, MEDIUM: 20, LOW: 10 };
   const base = points[severity.toUpperCase()] || 10;
@@ -15,9 +15,9 @@ function calculatePriority(severity, upvotes, createdAt) {
 }
 
 async function main() {
-  console.log('Seeding database with Prisma ORM...');
+  console.log('Prisma ORM se database mein initial data seed kar rahe hain...');
 
-  // Clean DBMS relational child tables first to respect foreign keys
+  // Foreign keys ka dhyaan rakhte hue pehle DBMS child tables ko clean kar rahe hain
   try {
     await prisma.$executeRawUnsafe(`DELETE FROM complaint_status_history;`);
     await prisma.$executeRawUnsafe(`DELETE FROM complaint_assignments;`);
@@ -30,18 +30,19 @@ async function main() {
     await prisma.$executeRawUnsafe(`DELETE FROM wards;`);
     await prisma.$executeRawUnsafe(`DELETE FROM departments;`);
   } catch (err) {
-    // Ignore if tables do not exist yet
+    // Agar tables abhi tak nahi bani hain toh ignore karo
   }
 
-  // Clean existing Prisma data for idempotency
+  // Idempotency ke liye existing Prisma models ka data clear karo
   await prisma.upvote.deleteMany();
   await prisma.issue.deleteMany();
   await prisma.user.deleteMany();
 
+  // Passwords ko hash kar rahe hain
   const adminPassword = await bcrypt.hash('Admin#Secure2026!', 10);
   const citizenPassword = await bcrypt.hash('Citizen#Secure2026!', 10);
 
-  // 1. Create Default Municipal Administrator
+  // 1. Default Municipal Administrator account bana rahe hain
   const admin = await prisma.user.create({
     data: {
       email: 'admin@civicsync.local',
@@ -50,9 +51,9 @@ async function main() {
       role: 'ADMIN'
     }
   });
-  console.log(`Created Admin: ${admin.email}`);
+  console.log(`Admin account create ho gaya: ${admin.email}`);
 
-  // 2. Create Default Citizen
+  // 2. Default Citizen account bana rahe hain
   const citizen = await prisma.user.create({
     data: {
       email: 'citizen@civicsync.local',
@@ -61,11 +62,11 @@ async function main() {
       role: 'CITIZEN'
     }
   });
-  console.log(`Created Citizen: ${citizen.email}`);
+  console.log(`Citizen account create ho gaya: ${citizen.email}`);
 
-  // 3. Seed DBMS Normalized Relational Tables (departments, wards, categories)
+  // 3. DBMS Normalized Relational Tables (departments, wards, categories) mein data daal rahe hain
   try {
-    // Seed Departments
+    // Departments seed karo
     await prisma.$executeRawUnsafe(`
       INSERT INTO departments (department_id, name, contact_email, contact_phone) VALUES
       (1, 'Road Works & Infrastructure', 'roads@sonipat.gov.in', '0130-2220101'),
@@ -74,7 +75,7 @@ async function main() {
       (4, 'Electrical & Street Lighting', 'electrical@sonipat.gov.in', '0130-2220104');
     `);
 
-    // Seed Wards
+    // Wards seed karo
     await prisma.$executeRawUnsafe(`
       INSERT INTO wards (ward_id, ward_number, ward_name, zone_name) VALUES
       (1, 'WARD-01', 'Sector 14 & Model Town', 'East Zone'),
@@ -84,7 +85,7 @@ async function main() {
       (5, 'WARD-05', 'Sector 23 & Rathdhana', 'South Zone');
     `);
 
-    // Seed Categories
+    // Categories seed karo
     await prisma.$executeRawUnsafe(`
       INSERT INTO categories (category_id, name, description, department_id, default_priority, sla_hours) VALUES
       (1, 'road_pothole', 'Potholes, surface craters, and asphalt degradation', 1, 'HIGH', 48),
@@ -94,12 +95,12 @@ async function main() {
       (5, 'water_leakage', 'Pipeline ruptures, drinking water supply disruptions', 3, 'HIGH', 24),
       (6, 'drainage_sewage', 'Blocked storm drains, open sewage overflow, waterlogging', 3, 'HIGH', 48);
     `);
-    console.log('Seeded DBMS normalized tables: departments, wards, categories.');
+    console.log('DBMS normalized tables (departments, wards, categories) successfully seed ho gayi.');
   } catch (err) {
-    console.warn('Note on relational table seed:', err.message);
+    console.warn('Relational tables seed karte waqt note:', err.message);
   }
 
-  // 4. Seed Realistic Sonipat Civic Issues
+  // 4. Sonipat shahar ki realistic sample complaints ka data
   const sampleIssues = [
     { track: 'REP-2026-00101', title: 'Deep crater cluster near Subhash Chowk on Kakroi Road', desc: 'Multiple severe potholes causing vehicular bottoming-out and hazard to two-wheelers.', cat: 'road_pothole', catId: 1, wardId: 2, sev: 'CRITICAL', status: 'REPORTED', lat: 28.9958, lng: 77.0182, addr: 'Subhash Chowk, Kakroi Road, Sonipat', votes: 12, daysAgo: 1 },
     { track: 'REP-2026-00102', title: 'Non-functional street light luminaires in Model Town 8-Marla Market', desc: 'Four consecutive LED streetlight luminaires failing to illuminate after sunset.', cat: 'streetlight', catId: 3, wardId: 1, sev: 'MEDIUM', status: 'IN_PROGRESS', lat: 28.9945, lng: 77.0230, addr: '8-Marla Main Market, Model Town, Sonipat', votes: 5, daysAgo: 3 },
@@ -136,7 +137,7 @@ async function main() {
       }
     });
 
-    // Also link into normalized 'complaints' table
+    // Normalized 'complaints' table mein bhi link kar rahe hain taaki DBMS queries match karein
     try {
       await prisma.$executeRawUnsafe(`
         INSERT OR REPLACE INTO complaints (
@@ -150,17 +151,17 @@ async function main() {
         );
       `);
 
-      // Add a status history entry
+      // Status history entry add karo initial report audit ke liye
       await prisma.$executeRawUnsafe(`
         INSERT INTO complaint_status_history (complaint_id, previous_status, new_status, changed_by_user_id, remarks)
         VALUES ('${item.track}', NULL, '${item.status}', ${admin.id}, 'Initial report verified by Sonipat Municipal Corporation');
       `);
     } catch (e) {
-      // Ignore if table not present
+      // Agar table nahi hai toh ignore karo
     }
   }
 
-  console.log(`Seeded ${sampleIssues.length} sample issues in Sonipat.`);
+  console.log(`Sonipat ki total ${sampleIssues.length} sample complaints successfully seed ho gayi.`);
 }
 
 main()

@@ -1,8 +1,8 @@
-// src/controllers/admin.controller.js - Express Controller for Administrator Operations
+// src/controllers/admin.controller.js - Municipal Administrator operations ke controllers
 const issueService = require('../services/issue.service');
 const statusEmitter = require('../events/statusEvents');
 
-// Helper to format issue object for frontend
+// Helper function: Frontend UI ke liye issue fields format karna
 function formatIssue(issue) {
   return {
     ...issue,
@@ -13,7 +13,7 @@ function formatIssue(issue) {
   };
 }
 
-// Get overview metrics for admin dashboard counters
+// Admin dashboard ke summary stats nikaalna (GET /api/admin/stats)
 async function getStats(req, res, next) {
   try {
     const stats = await issueService.getDashboardMetrics();
@@ -23,7 +23,7 @@ async function getStats(req, res, next) {
   }
 }
 
-// List all complaints for admin management table
+// Admin triage table ke liye saari complaints list karna (GET /api/admin/issues)
 async function listAll(req, res, next) {
   try {
     const result = await issueService.getIssuesList(req.query);
@@ -39,23 +39,24 @@ async function listAll(req, res, next) {
   }
 }
 
-// Update lifecycle status (REPORTED -> IN_PROGRESS -> RESOLVED) and emit statusChanged event
+// Complaint ka status change karna (PATCH /api/admin/issues/:id/status)
 async function changeStatus(req, res, next) {
   try {
     const { status } = req.body;
+    // Sirf yeh 3 status allowed hain lifecycle mein
     const allowed = ['REPORTED', 'IN_PROGRESS', 'RESOLVED'];
     const formattedStatus = (status || '').toUpperCase();
 
     if (!allowed.includes(formattedStatus)) {
-      return res.status(400).json({ success: false, message: 'Invalid status. Must be REPORTED, IN_PROGRESS, or RESOLVED.' });
+      return res.status(400).json({ success: false, message: 'Galat status hai. Status sirf REPORTED, IN_PROGRESS, ya RESOLVED hona chahiye.' });
     }
 
     const previous = await issueService.getIssueDetails(req.params.id);
-    if (!previous) return res.status(404).json({ success: false, message: 'Issue not found' });
+    if (!previous) return res.status(404).json({ success: false, message: 'Issue nahi mila.' });
 
     const updated = await issueService.updateStatus(req.params.id, formattedStatus);
 
-    // Emit event for asynchronous audit logging using Node.js events module
+    // Node.js events module ke through async audit logging trigger karo
     statusEmitter.emit('statusChanged', {
       issueId: updated.id,
       trackingNumber: updated.trackingNumber,
@@ -66,7 +67,7 @@ async function changeStatus(req, res, next) {
 
     res.status(200).json({
       success: true,
-      message: `Status updated to ${updated.status}`,
+      message: `Status badal kar ${updated.status} kar diya gaya hai.`,
       data: { issue: formatIssue(updated) }
     });
   } catch (err) {

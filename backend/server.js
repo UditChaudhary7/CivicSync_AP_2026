@@ -1,8 +1,8 @@
-// backend/server.js - CivicSync Backend Application
+// backend/server.js - CivicSync Backend Application ka main entry point
 const path = require('path');
 const fs = require('fs');
 
-// Load environment variables (.env in backend or root)
+// Environment variables (.env file) load kar rahe hain
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 if (!process.env.PORT) {
   require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -11,6 +11,7 @@ if (!process.env.PORT) {
 const express = require('express');
 const cors = require('cors');
 
+// Saare routes aur central error handler import kar rahe hain
 const authRoutes = require('./src/routes/auth.routes');
 const issueRoutes = require('./src/routes/issue.routes');
 const adminRoutes = require('./src/routes/admin.routes');
@@ -20,12 +21,12 @@ const errorHandler = require('./src/middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware for CORS, JSON body parsing, and URL-encoded forms
+// Middleware setup: CORS allow karna, incoming JSON aur URL-encoded form data parse karna
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files (prefers ../frontend, fallback to public) and evidence photo uploads
+// Frontend ki static files aur uploaded evidence photos serve karne ka path
 const frontendDir = fs.existsSync(path.join(__dirname, '../frontend'))
   ? path.join(__dirname, '../frontend')
   : path.join(__dirname, 'public');
@@ -37,22 +38,22 @@ const uploadsDir = fs.existsSync(path.join(__dirname, 'uploads'))
 app.use(express.static(frontendDir));
 app.use('/uploads', express.static(uploadsDir));
 
-// Mount MVC API Routers
+// MVC API Routes ko unke base path pe mount kar rahe hain
 app.use('/api/auth', authRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/dbms', dbmsRoutes);
 
-// Central error handling middleware
+// Sabhi unhandled errors ko pakadne ke liye central error handling middleware
 app.use(errorHandler);
 
-// Start HTTP Server when run directly or through root server.js
+// Direct run ya root server.js se run hone par HTTP server start karo
 const isDirectRun = require.main === module || 
   (require.main && require.main.filename === path.resolve(__dirname, '../server.js'));
 
 if (isDirectRun) {
   app.listen(PORT, () => {
-    console.log(`CivicSync server running at http://localhost:${PORT}`);
+    console.log(`CivicSync server chal raha hai: http://localhost:${PORT}`);
     console.log(`Default Administrator: admin@civicsync.local / Admin#Secure2026!`);
     console.log(`Default Citizen:       citizen@civicsync.local / Citizen#Secure2026!`);
   });

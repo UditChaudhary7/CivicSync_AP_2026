@@ -1,12 +1,13 @@
-// src/middleware/errorHandler.js - Central Express Error Handling Middleware
+// src/middleware/errorHandler.js - Application ka central error handling middleware
 
-// Catches unhandled errors across routers and controllers
+// Sabhi controllers aur routes ke unhandled errors ko pakad kar clean JSON response deta hai
 function errorHandler(err, req, res, next) {
-  console.error('Unhandled Server Error:', err.message);
+  console.error('Server Error:', err.message);
+  // Status code decide karo (agar error mein custom code hai toh woh, nahi toh 404 ya 500)
   const status = err.statusCode || (err.message.includes('not found') ? 404 : 500);
   res.status(status).json({
     success: false,
-    message: err.message || 'An unexpected internal server error occurred.'
+    message: err.message || 'Server par koi unexpected error aa gaya.'
   });
 }
 
